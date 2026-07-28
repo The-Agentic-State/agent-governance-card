@@ -17,8 +17,8 @@
       browser -> OpenRouter directly, no server anywhere). The model records
       answers via a <record>{json}</record> protocol and NEVER computes the
       Impact Level: when it emits <derive/>, the page runs the pinned engine.
-    3. pull the skill from GitHub: run the real skill in Claude Code / any
-       agent harness (informational panel with the clone command)
+    3. install the skill in your own agent: npx skills add The-Agentic-State/agent-governance-card
+       (informational panel; works across Claude Code, Codex, Cursor + others)
 
   Routes 1 and 2 both open with the explicit mode question (decided 2026-07-28,
   closing the triage question): "quick scan" (C1 + the six derivation inputs,
@@ -705,11 +705,11 @@
       <div class="route"><span class="rnum">2 · Live in the browser</span><b>Live interview (bring a key)</b>
         <p>The real <i>conversational</i> skill — paste an OpenRouter key and a model conducts the interview and advises, while the Impact Level is still computed by this page's pinned engine, never by the model.</p>
         <button class="btn" data-route="live">Set up below ↓</button></div>
-      <div class="route"><span class="rnum">3 · In your own agent</span><b>Pull the skill from GitHub</b>
-        <p>Run the <i>real</i> skill in Claude Code (or any agent harness): clone the public repo, open it, and ask to fill in the governance card. <code>skills/agent-governance-card/SKILL.md</code> drives the interview from the canonical schema; the bundled engine computes the level deterministically. Copying just the skill folder works standalone (bundled snapshot).</p>
-        <code class="clone" id="cloneCmd">git clone https://github.com/The-Agentic-State/agent-governance-card.git</code>
+      <div class="route"><span class="rnum">3 · In your own agent</span><b>Install the skill in your agent</b>
+        <p>One command installs the <i>real</i> skill into your favourite coding agent (Claude Code, Codex, Cursor, and many others) — then ask it to fill in the governance card. The skill drives the interview from the canonical schema and computes the level with the bundled deterministic engine; it works standalone (bundled snapshot).</p>
+        <code class="clone" id="cloneCmd">npx skills add The-Agentic-State/agent-governance-card</code>
         <p>Open source (CC-BY-4.0): <a href="https://github.com/The-Agentic-State/agent-governance-card">github.com/The-Agentic-State/agent-governance-card</a> — schema + skill.</p>
-        <button class="btn" id="copyClone">Copy clone command</button></div>
+        <button class="btn" id="copyClone">Copy install command</button></div>
     </div>
 
     <div class="livesetup" id="livesetup">
@@ -775,8 +775,8 @@
     var t=document.getElementById('cloneCmd').textContent;
     if(navigator.clipboard&&navigator.clipboard.writeText)
       navigator.clipboard.writeText(t).then(
-        function(){cc.textContent='Copied ✓';setTimeout(function(){cc.textContent='Copy clone command';},1400);},
-        function(){cc.textContent='Copy failed';setTimeout(function(){cc.textContent='Copy clone command';},1400);});
+        function(){cc.textContent='Copied ✓';setTimeout(function(){cc.textContent='Copy install command';},1400);},
+        function(){cc.textContent='Copy failed';setTimeout(function(){cc.textContent='Copy install command';},1400);});
   });
   document.querySelectorAll('.routes [data-route]').forEach(function(b){
     b.addEventListener('click',function(){
