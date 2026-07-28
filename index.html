@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Agent Governance Card</title>
+<!--
+  Agent Governance Card — standalone site (intro / schema / runnable skill).
+  Plain self-contained HTML+CSS+JS, no external dependencies, no build step:
+  open this file in a browser, or host it anywhere (GitHub Pages works as-is).
+
+  The skill tab presents THREE access routes:
+    1. try it here (default, offline): deterministic scripted interview + the
+       derivation engine
+    2. live (bring-your-own-key): the real conversational skill over OpenRouter —
+      the visitor pastes their own API key (stored only in localStorage, calls go
+      browser -> OpenRouter directly, no server anywhere). The model records
+      answers via a <record>{json}</record> protocol and NEVER computes the
+      Impact Level: when it emits <derive/>, the page runs the pinned engine.
+    3. pull the skill from GitHub: run the real skill in Claude Code / any
+       agent harness (informational panel with the clone command)
+
+  Routes 1 and 2 both open with the explicit mode question (decided 2026-07-28,
+  closing the triage question): "quick scan" (C1 + the six derivation inputs,
+  provisional level, NOT a fileable card, YAML stamped mode: quick_scan) vs
+  "full card" (all Core, fileable, mode: full). Quick-scan answers carry over
+  on upgrade. Same wording as skills/agent-governance-card/SKILL.md §2.3 — keep in sync.
+
+  Content sources (keep in sync when the schema moves):
+    /schema/agent-governance-card.schema.yaml            card v0.3, derivation contract 2
+    /skills/agent-governance-card/SKILL.md               interview procedure
+    /skills/agent-governance-card/scripts/derive_impact.py  the derivation engine —
+                                                ported 1:1 to JS in deriveImpact() below
+-->
+<style>
+  :root {
+    --accent:#a491fc; --accent-3:#cdc4fd; --accent-5:#efecff; --accent-ink:#4a3a9e;
+    --ink:#1A2733; --muted:#6B7280; --line:#E3E0F2; --bg:#FFFFFF; --panel:#FBFAFF;
+    --code-bg:#f6f4fd; --shadow:0 1px 3px rgba(26,39,51,.06),0 8px 30px rgba(90,70,180,.06);
+    --good:#3f9d6d; --warn:#c98a2b; --crit:#c0607a;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Newsreader,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ink:#ECEAF6; --muted:#9a97ac; --line:#2c2b3a; --bg:#14131c; --panel:#1b1a26;
+      --accent-5:#241f3a; --accent-ink:#cdc4fd; --code-bg:#1e1c2c;
+      --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="light"]{
+    --ink:#1A2733; --muted:#6B7280; --line:#E3E0F2; --bg:#FFFFFF; --panel:#FBFAFF;
+    --accent-5:#efecff; --accent-ink:#4a3a9e; --code-bg:#f6f4fd;
+    --shadow:0 1px 3px rgba(26,39,51,.06),0 8px 30px rgba(90,70,180,.06);
+  }
+  :root[data-theme="dark"]{
+    --ink:#ECEAF6; --muted:#9a97ac; --line:#2c2b3a; --bg:#14131c; --panel:#1b1a26;
+    --accent-5:#241f3a; --accent-ink:#cdc4fd; --code-bg:#1e1c2c;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-weight:300;letter-spacing:.1px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px 90px;}
+  a{color:var(--accent-ink);}
+  button{font-family:var(--sans);}
+
+  header.top{padding:42px 0 20px;}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink);
+           font-weight:400;margin:0 0 10px;}
+  h1.title{font-family:var(--serif);font-style:italic;font-weight:300;
+           font-size:clamp(30px,5vw,46px);line-height:1.1;margin:0;text-wrap:balance;}
+
+  .bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+       position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0;
+       border-bottom:1px solid var(--line);}
+  .seg{display:flex;flex-wrap:wrap;gap:6px;background:var(--panel);border:1px solid var(--line);
+       border-radius:10px;padding:5px;}
+  .seg button{font-size:14px;font-weight:400;color:var(--muted);background:transparent;border:0;
+              border-radius:7px;padding:8px 14px;cursor:pointer;white-space:nowrap;
+              transition:background .15s,color .15s;}
+  .seg button:hover{color:var(--ink);}
+  .seg button[aria-selected="true"]{background:var(--accent);color:#fff;}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .theme{font-size:13px;font-weight:400;color:var(--muted);cursor:pointer;background:var(--panel);
+         border:1px solid var(--line);border-radius:8px;padding:8px 12px;}
+
+  .page{display:none;animation:fade .25s ease;}
+  .page.on{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.page{animation:none}}
+
+  /* ============ PAGE 1 · INTRO ============ */
+  .intro{max-width:66ch;margin-top:26px;}
+  .intro p{font-size:17.5px;margin:0 0 15px;}
+  .intro p b{font-weight:400;}
+  .pillars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0 8px;}
+  @media (max-width:700px){.pillars{grid-template-columns:1fr;}}
+  .pillar{border:1px solid var(--line);border-radius:12px;background:var(--panel);
+          padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+  .pillar .no{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);
+              font-weight:400;margin-bottom:4px;}
+  .pillar h3{font-family:var(--serif);font-style:italic;font-weight:300;font-size:22px;margin:0 0 6px;}
+  .pillar p{font-size:14.5px;color:var(--muted);margin:0 0 12px;}
+  .pillar p b{color:var(--ink);font-weight:400;}
+  .pillar .go{margin-top:auto;align-self:flex-start;background:var(--accent);color:#fff;border:0;
+              border-radius:8px;padding:8px 16px;font-size:13.5px;font-weight:400;cursor:pointer;}
+  .adoption{font-size:13.5px;color:var(--muted);border-left:3px solid var(--accent);
+            background:var(--accent-5);padding:10px 16px;border-radius:0 8px 8px 0;
+            margin:22px 0 0;max-width:66ch;}
+  .adoption b{color:var(--ink);font-weight:400;}
+
+  /* ============ PAGE 2 · SCHEMA ============ */
+  .facenote{font-size:15px;color:var(--muted);margin:20px 0 4px;max-width:72ch;}
+  .facenote b{color:var(--ink);font-weight:400;}
+  .schemahead{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 6px;}
+  .stat{border:1px solid var(--line);border-radius:10px;padding:11px 16px;background:var(--panel);min-width:110px;}
+  .stat b{display:block;font-size:22px;font-weight:400;color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+  .stat span{font-size:12px;color:var(--muted);}
+  .dimlbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+          font-weight:400;margin:20px 0 6px;}
+  .dims{display:flex;flex-direction:column;gap:8px;}
+  details.dim{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);}
+  details.dim summary{display:flex;align-items:baseline;gap:10px;padding:11px 16px;cursor:pointer;
+                      list-style:none;flex-wrap:wrap;}
+  details.dim summary::-webkit-details-marker{display:none;}
+  details.dim summary:hover .lt{color:var(--accent-ink);}
+  .dim .chev{color:var(--accent-ink);font-size:11px;transition:transform .15s;display:inline-block;}
+  details.dim[open] .chev{transform:rotate(90deg);}
+  .dim .lt{font-weight:400;font-size:15px;font-family:var(--mono);}
+  .dim .dsc{font-size:12.5px;color:var(--muted);}
+  .dim .cnt{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  pre.code{margin:0;background:var(--code-bg);border-top:1px solid var(--line);
+           padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;
+           line-height:1.55;color:var(--ink);}
+  pre.code .k{color:var(--accent-ink);} pre.code .s{color:var(--good);} pre.code .c{color:var(--muted);font-style:italic;}
+  .schemafoot{font-size:13.5px;color:var(--muted);margin-top:14px;max-width:74ch;}
+
+  /* ============ PAGE 3 · SKILL ============ */
+  .skillwrap{margin-top:18px;}
+  .livesetup{border:1px dashed var(--accent-3);border-radius:10px;padding:14px 16px;
+             margin:16px 0;background:var(--panel);}
+  .livesetup .lead{font-size:14px;}
+  .livesetup .lead b{font-weight:400;}
+  .livesetup .lead span{color:var(--muted);}
+  .livesetup .row2{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;}
+  .livesetup input,.livesetup select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;
+                   font-size:13px;background:var(--bg);color:var(--ink);font-family:var(--sans);}
+  .livesetup input.key{width:min(320px,100%);}
+  .livesetup select.model{max-width:min(300px,100%);}
+  .livesetup input.model{width:min(300px,100%);font-family:var(--mono);font-size:12px;}
+  .livesetup .hint{font-size:12px;color:var(--muted);margin:8px 0 0;max-width:78ch;}
+  .btn{background:var(--accent);color:#fff;font-weight:400;font-size:13.5px;border:0;
+       border-radius:8px;padding:9px 16px;cursor:pointer;}
+  .btn.ghost{background:var(--panel);color:var(--muted);border:1px solid var(--line);}
+  .chat{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:8px 8px 14px;box-shadow:var(--shadow);}
+  .chat .head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);
+              font-size:13px;color:var(--muted);flex-wrap:wrap;}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);}
+  .dot.live{background:var(--good);}
+  .chat .head .prog{margin-left:auto;font-family:var(--mono);font-size:11.5px;}
+  .msg{display:flex;gap:11px;padding:12px 12px 4px;}
+  .msg .who{font-size:11px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;
+            color:var(--muted);min-width:44px;padding-top:3px;flex-shrink:0;}
+  .bubble{border-radius:10px;padding:10px 14px;font-size:15px;max-width:72ch;overflow-wrap:anywhere;
+          white-space:pre-wrap;}
+  .agent .bubble{background:var(--accent-5);color:var(--ink);}
+  .agent .who{color:var(--accent-ink);}
+  .user .bubble{background:transparent;border:1px solid var(--line);}
+  .note .bubble{background:transparent;border:1px dashed var(--accent-3);font-size:13.5px;color:var(--muted);}
+  .note .who{color:var(--accent-ink);}
+  .err .bubble{border:1px solid var(--crit);color:var(--crit);font-size:13.5px;background:transparent;}
+  .err .who{color:var(--crit);}
+  .bubble code{font-family:var(--mono);font-size:.85em;background:var(--code-bg);
+               padding:1px 5px;border-radius:4px;}
+  .bubble .gloss{font-size:13px;color:var(--muted);margin-top:6px;white-space:normal;}
+  .bubble ul.help{font-size:13px;color:var(--muted);margin:6px 0 0;padding-left:18px;white-space:normal;}
+  .bubble ul.help li{margin:2px 0;}
+  .answerbox{padding:12px 12px 2px 67px;}
+  .pills{display:flex;flex-wrap:wrap;gap:6px;}
+  .pills button{font-size:13px;border:1px solid var(--accent-3);color:var(--accent-ink);
+                background:var(--bg);border-radius:20px;padding:6px 13px;cursor:pointer;}
+  .pills button:hover{background:var(--accent-5);}
+  .pills button.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .pills button.status{border-color:var(--line);color:var(--muted);border-style:dashed;}
+  .pills button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .tin{width:100%;max-width:72ch;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+       font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg);resize:vertical;}
+  .arow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center;}
+  .routes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 16px;}
+  @media (max-width:760px){.routes{grid-template-columns:1fr;}}
+  .routes .route{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:7px;}
+  .routes .route b{font-size:14.5px;font-weight:600;}
+  .routes .route .rnum{color:var(--muted);font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;}
+  .routes .route p{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+  .routes .route code.clone{display:block;font-family:var(--mono);font-size:11.5px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow-x:auto;white-space:nowrap;}
+  .routes .route .btn{align-self:flex-start;margin-top:auto;}
+  .modechoice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 4px;max-width:72ch;}
+  @media (max-width:640px){.modechoice{grid-template-columns:1fr;}}
+  .modechoice button{text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--bg);
+                     padding:13px 15px;cursor:pointer;color:var(--ink);}
+  .modechoice button:hover{border-color:var(--accent);}
+  .modechoice b{font-weight:400;display:block;font-size:14.5px;}
+  .modechoice span{font-size:12.5px;color:var(--muted);}
+  .verdict{margin:14px 12px 0;border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:var(--bg);}
+  .verdict h4{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;
+              color:var(--accent-ink);font-weight:400;}
+  .lvl{display:inline-block;font-size:13px;font-weight:400;border-radius:6px;padding:4px 12px;color:#fff;}
+  .lvl.low{background:var(--good);} .lvl.moderate{background:var(--warn);} .lvl.high{background:var(--crit);}
+  .chip{display:inline-block;font-size:11px;border:1px solid var(--accent-3);color:var(--accent-ink);
+        border-radius:5px;padding:2px 8px;margin-left:6px;vertical-align:middle;}
+  .verdict .row{font-size:14px;margin:7px 0;}
+  .verdict .row b{font-weight:400;}
+  .verdict ul{font-size:13.5px;margin:4px 0 0;padding-left:19px;color:var(--muted);}
+  .verdict ul li{margin:4px 0;}
+  .verdict ul li b{color:var(--ink);font-weight:400;}
+  pre.yaml{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+           padding:13px 15px;overflow-x:auto;font-family:var(--mono);font-size:12px;
+           line-height:1.5;margin:10px 0 0;max-height:340px;overflow-y:auto;}
+  details.sample{margin-top:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);}
+  details.sample summary{cursor:pointer;padding:12px 16px;font-size:14px;font-weight:400;
+                         color:var(--accent-ink);list-style:none;}
+  details.sample summary::-webkit-details-marker{display:none;}
+  details.sample .inner{padding:0 8px 12px;}
+
+  footer.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);
+              font-size:13px;color:var(--muted);}
+  footer.foot b{color:var(--ink);font-weight:400;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">The Agentic State × Center for Civic Futures</p>
+    <h1 class="title">The Agent Governance Card</h1>
+  </header>
+
+  <nav class="bar">
+    <div class="seg" role="tablist" aria-label="Pages">
+      <button role="tab" aria-selected="true"  data-page="intro">1 · The idea</button>
+      <button role="tab" aria-selected="false" data-page="schema">2 · The schema</button>
+      <button role="tab" aria-selected="false" data-page="skill">3 · Try the skill</button>
+    </div>
+    <button class="theme" id="themeBtn">◑ Theme</button>
+  </nav>
+
+  <!-- ==================== PAGE 1 · THE IDEA ==================== -->
+  <section class="page on" id="page-intro">
+    <div class="intro">
+      <p>State governments are moving past chatbots into <b>agentic AI — software that takes actions</b>: it uses tools, touches data, sends things, files things, completes multi-step tasks with real autonomy. The governance machinery states rely on today — intake, security review, procurement, audit — was not built for software that acts. What's missing is not another framework; it's a <b>simple, per-deployment record</b> of the questions every state has to be able to answer before an agent goes live: what is it allowed to do, what does it touch, who answers for it when it acts, how does a person step in — and what does it cost to leave.</p>
+      <p>The Agent Governance Card is that record. A product team completes it <b>before an agentic system gets production access</b> to state data, tools, or users. It is a snapshot of what is true at go-live, not a list of promises; <i>unknown</i> and <i>not in place</i> are formal answers, because a missing mechanism recorded plainly is a governance finding, not a failure. From the team's own answers the card computes an <b>Impact Level</b> that routes proportionate obligations — and when several states fill the same card, their deployments become comparable.</p>
+      <p style="font-size:15px;color:var(--muted);">We do it with two instruments:</p>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="no">Instrument 1 · the record</div>
+        <h3>The schema</h3>
+        <p>One canonical, machine-readable file is the source of truth: <b>the explicit metadata a state needs to know about every agent</b> — 44 plain-language questions in 12 dimensions, a 9-field controlled spine for cross-state comparability, an explicit <b>public layer</b> (what citizens get to see), and the derivation rules that compute the Impact Level. Built on OMB M-25-21/22, UK ATRS, NIST, and the agentic standards work — and stress-tested against 20 real deployments before we ask anyone to trust it.</p>
+        <button class="go" data-goto="schema">Read the schema →</button>
+      </div>
+      <div class="pillar">
+        <div class="no">Instrument 2 · the way in</div>
+        <h3>The skill</h3>
+        <p>Nobody fills a 44-field form for fun. The skill is an <b>AI interview that navigates the schema for you</b>: plain-language questions one at a time, advice on what each option means in your context, honest handling of unknowns — then it computes your Impact Level and emits the filled card, human-readable and machine-readable. A governance thinking partner, pointed at producing the record.</p>
+        <button class="go" data-goto="skill">Try it →</button>
+      </div>
+    </div>
+
+    <p class="adoption"><b>A voluntary instrument.</b> The card records, computes, and recommends — it never blocks. Its recommendations become gates only where an adopting authority (a state CIO or agency directive) makes a completed card a precondition for production access.</p>
+  </section>
+
+  <!-- ==================== PAGE 2 · THE SCHEMA ==================== -->
+  <section class="page" id="page-schema">
+    <p class="facenote"><b>The schema — card v0.3.</b> This is the actual canonical file (YAML, versioned in GitHub), dimension by dimension. Every face of the card — the skill, a form, a document — renders from it. Questions are the content layer, which is editable.</p>
+    <div class="schemahead">
+      <div class="stat"><b>44</b><span>questions — 27 Core + 17 Extended</span></div>
+      <div class="stat"><b>12</b><span>dimensions</span></div>
+      <div class="stat"><b>9</b><span>comparable across states</span></div>
+      <div class="stat"><b>14</b><span>public-layer fields</span></div>
+    </div>
+
+    <p class="dimlbl">Front matter — adoption, scope, unit of analysis</p>
+    <div class="dims">
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">adoption + scope_trigger + unit_of_analysis</span><span class="cnt">front matter</span></summary>
+<pre class="code"><span class="k">schema:</span> agent-governance-card
+<span class="k">card_version:</span> <span class="s">"0.3"</span>
+<span class="k">derivation_contract_version:</span> 2
+<span class="k">adoption:</span> <span class="s">&gt;
+  Voluntary instrument. to_resolve items are strong recommendations; they become
+  gates only where an adopting directive makes the completed card a precondition
+  for production access.</span>
+<span class="k">answer_statuses:</span> [answered, unknown, not_applicable, not_in_place]
+<span class="k">scope_trigger:</span>
+  <span class="k">card_required_if:</span> <span class="s">&gt;
+    (interacts directly with the public) OR (materially influences a decision-making
+    process with effect on the public or state resources), AND takes actions or
+    produces outputs beyond returning static search results.</span>
+  <span class="k">out_of_scope:</span> <span class="s">&gt;
+    embedded commodity features (autocomplete, spell-check, in-app summarization) and
+    purely predictive back-office models.</span>
+  <span class="k">out_of_scope_boundary_test:</span> <span class="s">&gt;
+    M-25-22 §2(b) two-part test: exempt only if (1) widely available to the public for
+    commercial use, AND (2) the AI is embedded in a product with substantial non-AI
+    purposes. A product used primarily FOR its AI (a licensed copilot) is in scope.</span>
+<span class="k">unit_of_analysis:</span>
+  <span class="k">one_card:</span> <span class="s">one agent deployment in one operational context.</span>
+  <span class="k">platform_pattern:</span> <span class="s">&gt;
+    parent card (shared layer) + one deployment addendum per context.</span></pre>
+      </details>
+    </div>
+
+    <p class="dimlbl">Part 1 · Core — every in-scope agent</p>
+    <div class="dims">
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">identity</span><span class="dsc">what it is, in plain language</span><span class="cnt">4 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C1
+  <span class="k">label:</span> <span class="s">Name</span>
+  <span class="k">question:</span> <span class="s">"What is the agent called?"</span>
+  <span class="k">type:</span> text
+  <span class="k">public:</span> true
+<span class="k">- id:</span> C2
+  <span class="k">label:</span> <span class="s">What it is, in plain language</span>
+  <span class="k">question:</span> <span class="s">"What is it, in plain language? (2-3 sentences)"</span>
+  <span class="k">type:</span> text
+  <span class="k">public:</span> true
+<span class="k">- id:</span> C3
+  <span class="k">label:</span> <span class="s">Purpose / what it's for</span>
+  <span class="k">question:</span> <span class="s">"What is it for — what task or service does it perform?"</span>
+  <span class="k">type:</span> text
+  <span class="k">public:</span> true
+<span class="k">- id:</span> C4
+  <span class="k">label:</span> <span class="s">Agent type</span>
+  <span class="k">question:</span> <span class="s">"Which agent type is it?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">public:</span> true
+  <span class="k">values:</span> [assistant_copilot, autonomous_single, orchestrator_subagents, agent_as_a_service]
+  <span class="k">gloss:</span> <span class="s">&gt;
+    a no-tool conversational assistant is assistant_copilot; so is one whose tools
+    can only READ. Once it can change anything outside the conversation (send,
+    write, book, file), it is autonomous_single — or orchestrator_subagents if it
+    spawns agents (v0.3 boundary clarification).</span></pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">what_it_does</span><span class="dsc">capability, model, the OMB high-impact determination + its record</span><span class="cnt">5 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C5
+  <span class="k">label:</span> <span class="s">Capability</span>
+  <span class="k">question:</span> <span class="s">"What can it do? Choose every capability that applies."</span>
+  <span class="k">type:</span> multi_enum
+  <span class="k">comparability:</span> true
+  <span class="k">values:</span> [information_drafting, official_communication, business_transaction,
+           computer_use, code_execution, data_analysis, physical_actuation]
+<span class="k">- id:</span> C5a
+  <span class="k">label:</span> <span class="s">Capability specifics</span>
+  <span class="k">question:</span> <span class="s">"Describe the specifics — what exactly does it produce or do?"</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> C6
+  <span class="k">label:</span> <span class="s">Underlying model(s) &amp; how it decides</span>
+  <span class="k">question:</span> <span class="s">"Which model(s) is it built on, and how does it decide — does it plan or choose tools?"</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> C7
+  <span class="k">label:</span> <span class="s">High-impact determination (OMB M-25-21)</span>
+  <span class="k">question:</span> <span class="s">"Is the agent's output used as a principal basis for a decision or
+             action that has a legal, material, binding, or significant effect on
+             rights, access to services, health and safety, critical infrastructure,
+             or strategic assets?"</span>
+  <span class="k">help:</span>
+    - <span class="s">"(a) civil rights, civil liberties, or privacy"</span>
+    - <span class="s">"(b) access to education, housing, insurance, credit, employment, and other programs"</span>
+    - <span class="s">"(c) access to critical government resources or services"</span>
+    - <span class="s">"(d) human health and safety"</span>
+    - <span class="s">"(e) critical infrastructure or public safety"</span>
+    - <span class="s">"(f) strategic assets or resources"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">values:</span> [high_impact, presumed_high_but_determined_not, not_high_impact, not_yet_determined]
+  <span class="k">note:</span> <span class="s">&gt;
+    Categories (a)-(f) verbatim from M-25-21 §5 (verified against the memo
+    2026-07-24). Human involvement does not exempt: "a high-impact determination
+    is possible whether there is or is not human oversight" (§4(a)).
+    not_yet_determined no longer blocks (v0.3): the card completes with a
+    PROVISIONAL level and a to_resolve item. Drives output 1 of the derivation.</span>
+<span class="k">- id:</span> C7a
+  <span class="k">label:</span> <span class="s">Determination record</span>
+  <span class="k">question:</span> <span class="s">"Who made the high-impact determination, in what role, on what date —
+             and on what rationale?"</span>
+  <span class="k">type:</span> text
+  <span class="k">note:</span> <span class="s">&gt;
+    v0.3 — REQUIRED when C7 = presumed_high_but_determined_not (M-25-21 §4(a)
+    written-documentation requirement); recommended for every other answered C7.</span></pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">what_it_touches</span><span class="dsc">data, tools, systems</span><span class="cnt">3 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C8
+  <span class="k">label:</span> <span class="s">Data sensitivity</span>
+  <span class="k">question:</span> <span class="s">"What is the most sensitive data it touches in operation — including
+             what users type or say to it?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">values:</span> [none_public, internal, personal_pii, sensitive]
+  <span class="k">gloss:</span> <span class="s">"classify by the most sensitive data touched in operation (incl. user
+          input), not the knowledge-store classification."</span>
+<span class="k">- id:</span> C8a
+  <span class="k">label:</span> <span class="s">Datasets / source of truth</span>
+  <span class="k">question:</span> <span class="s">"Which datasets or sources of truth does it use?"</span>
+  <span class="k">type:</span> list
+<span class="k">- id:</span> C9
+  <span class="k">label:</span> <span class="s">Tools, systems &amp; APIs it can reach</span>
+  <span class="k">question:</span> <span class="s">"Which tools, systems, and APIs can it reach — everything it can call or act on?"</span>
+  <span class="k">type:</span> list</pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">autonomy_control</span><span class="dsc">autonomy, reversibility, severity, the red-line</span><span class="cnt">5 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C10
+  <span class="k">label:</span> <span class="s">Autonomy level</span>
+  <span class="k">question:</span> <span class="s">"How much does the agent do before a human is involved?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">public:</span> true
+  <span class="k">values:</span> [informs, recommends, acts_with_approval, acts_without_approval]
+  <span class="k">gloss:</span> <span class="s">"'acts' includes any effect outside the conversation (notifications,
+          flags, records, messages)."</span>
+<span class="k">- id:</span> C11
+  <span class="k">label:</span> <span class="s">Reversibility of its actions</span>
+  <span class="k">question:</span> <span class="s">"Once it acts, how hard is it to undo?"</span>
+  <span class="k">help:</span>
+    - <span class="s">"a draft a person edits before it goes anywhere = fully_reversible"</span>
+    - <span class="s">"once an answer, message, or change reaches someone who may rely or act
+       on it, it is no longer fully reversible"</span>
+    - <span class="s">"a public communication, a payment, a benefits decision, or deleting
+       records = hard_to_reverse"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">values:</span> [fully_reversible, reversible_with_effort, hard_to_reverse]
+  <span class="k">gloss:</span> <span class="s">"judged at the point of external effect, not at generation."</span>
+<span class="k">- id:</span> C11a
+  <span class="k">label:</span> <span class="s">Maximum consequence severity</span>
+  <span class="k">question:</span> <span class="s">"What is the worst plausible consequence of a wrong or harmful output,
+             at the scale it operates?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">values:</span> [negligible, limited, serious, severe]
+  <span class="k">note:</span> <span class="s">&gt;
+    Anchors: external write-access/publication/financial effect -&gt; at least
+    limited; wrong actionable guidance or &gt;10k people/records -&gt; at least
+    serious; bodily harm / loss of rights / mass irreversible -&gt; severe.</span>
+<span class="k">- id:</span> C12
+  <span class="k">label:</span> <span class="s">Safety red-line (the agentic trifecta)</span>
+  <span class="k">question:</span> <span class="s">"Without a human in the loop, does it combine all three of: acting on
+             untrusted or external input; access to non-public personal or protected
+             data; and the ability to change anything outside the conversation?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">values:</span> [<span class="s">"no"</span>, yes_with_compensating_controls, yes_unresolved]
+  <span class="k">note:</span> <span class="s">&gt;
+    Leg (b) is judged INDEPENDENTLY of C8. yes_with_compensating_controls =
+    mitigated (name the controls). yes_unresolved derives High and adds a
+    to_resolve item: strong recommendation not to enter production until one
+    trifecta leg is broken or named controls are in place (v0.3 —
+    recommendation, not prohibition; see adoption).</span>
+<span class="k">- id:</span> C13
+  <span class="k">label:</span> <span class="s">How a person stops or overrides it</span>
+  <span class="k">question:</span> <span class="s">"How does a person stop or override it?"</span>
+  <span class="k">type:</span> text</pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">accountability</span><span class="dsc">who answers for it</span><span class="cnt">3 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C14
+  <span class="k">label:</span> <span class="s">Accountable owner (role, not person)</span>
+  <span class="k">question:</span> <span class="s">"Who is answerable for it in operation — a role or title, not a person?"</span>
+  <span class="k">type:</span> text
+  <span class="k">public:</span> true
+<span class="k">- id:</span> C15
+  <span class="k">label:</span> <span class="s">Deploying agency / unit + contact point</span>
+  <span class="k">question:</span> <span class="s">"Which agency or unit deploys it, and what is the contact point?"</span>
+  <span class="k">type:</span> text
+  <span class="k">public:</span> true
+<span class="k">- id:</span> C16
+  <span class="k">label:</span> <span class="s">Vendor &amp; exit basics</span>
+  <span class="k">question:</span> <span class="s">"Who is the vendor (or is it in-house), under what contract vehicle —
+             and in one sentence, what leaves with you if you switch?"</span>
+  <span class="k">type:</span> text
+  <span class="k">note:</span> <span class="s">"exit is impact-independent; full exit questions in E18 (M-25-22)."</span></pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">placement</span><span class="dsc">function served, lifecycle stage</span><span class="cnt">2 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C17
+  <span class="k">label:</span> <span class="s">Government function served</span>
+  <span class="k">question:</span> <span class="s">"Which government function does it serve?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">public:</span> true
+  <span class="k">note:</span> <span class="s">"OMB M-25-21 Use Case Topic Area, verbatim."</span>
+  <span class="k">values:</span> [administrative_functions, cybersecurity, emergency_management,
+           energy_and_environment, government_benefits_processing, health_and_medical,
+           human_resources, information_technology, international_affairs,
+           law_enforcement, procurement_and_financial_management, science,
+           service_delivery, transportation, other]
+<span class="k">- id:</span> C18
+  <span class="k">label:</span> <span class="s">Lifecycle stage</span>
+  <span class="k">question:</span> <span class="s">"Where is it in its lifecycle?"</span>
+  <span class="k">type:</span> enum
+  <span class="k">comparability:</span> true
+  <span class="k">public:</span> true
+  <span class="k">values:</span> [pre_deployment, pilot, deployed, retired]
+  <span class="k">note:</span> <span class="s">"on retirement the card is closed, not deleted."</span></pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">risk</span><span class="dsc">base risks, agentic hazards, testing, public summary, disclosure</span><span class="cnt">5 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> C19
+  <span class="k">label:</span> <span class="s">Which base risks apply</span>
+  <span class="k">question:</span> <span class="s">"Which base risks apply? Every AI system carries these — choose all that fit."</span>
+  <span class="k">type:</span> list
+  <span class="k">suggested_values:</span> [confabulation_inaccurate_output, harmful_bias, data_privacy,
+                     information_security]
+<span class="k">- id:</span> C19a
+  <span class="k">label:</span> <span class="s">Which agentic hazards apply</span>
+  <span class="k">question:</span> <span class="s">"Which agentic hazards apply? Answer if it acts on tools/systems or takes
+             multi-step autonomous action; a system with no tools at all marks this
+             not_applicable — that is a complete answer."</span>
+  <span class="k">type:</span> list
+  <span class="k">suggested_values:</span> [prompt_injection, unsafe_irreversible_actuation,
+                     over_privileged_tools, memory_poisoning, cascading_failure]
+  <span class="k">note:</span> <span class="s">&gt;
+    v0.3 boundary: retrieval-only grounding (RAG, document/web lookup) still
+    answers — retrieved content is untrusted input, so prompt_injection applies
+    at minimum, even with no write-capable tools.</span>
+<span class="k">- id:</span> C20
+  <span class="k">label:</span> <span class="s">Pre-deployment testing / evaluation done</span>
+  <span class="k">question:</span> <span class="s">"Has an actual evaluation of this system been done before deployment,
+             with results? (Y/N + link)"</span>
+  <span class="k">type:</span> bool_plus_link
+  <span class="k">gloss:</span> <span class="s">"a register's 'impact assessed: yes' flag is NOT testing."</span>
+<span class="k">- id:</span> C21
+  <span class="k">label:</span> <span class="s">Public plain-language summary published</span>
+  <span class="k">question:</span> <span class="s">"Is a public plain-language summary published? (Y/N + link)"</span>
+  <span class="k">type:</span> bool_plus_link
+  <span class="k">public:</span> true
+<span class="k">- id:</span> C22
+  <span class="k">label:</span> <span class="s">Disclosure — are people told they're dealing with an agent</span>
+  <span class="k">question:</span> <span class="s">"Are the people who interact with it told they're dealing with an AI
+             agent? How?"</span>
+  <span class="k">type:</span> bool_plus_text
+  <span class="k">public:</span> true
+  <span class="k">note:</span> <span class="s">&gt;
+    v0.3 — promoted from Extended: disclosure is a Core question for any
+    public-facing agent, whatever the Impact Level; AI disclosure is where
+    states have legislated first. Internal-only agents may answer
+    not_applicable — a complete answer.</span></pre>
+      </details>
+    </div>
+
+    <p class="dimlbl">Part 2 · Extended — Moderate / High impact (reduced set when floored by an unknown)</p>
+    <div class="dims">
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">identity_delegation</span><span class="dsc">whose authority is behind each action</span><span class="cnt">5 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> E1
+  <span class="k">label:</span> <span class="s">Whose identity does it act under</span>
+  <span class="k">question:</span> <span class="s">"When it acts — sends an email, calls a system — whose identity does it use?"</span>
+  <span class="k">type:</span> text
+  <span class="k">gloss:</span> <span class="s">"Own dedicated service identity, a shared team account, or a specific
+          person's login? Unsure is common — record what's true."</span>
+<span class="k">- id:</span> E2
+  <span class="k">label:</span> <span class="s">On whose authority — human principal/sponsor</span>
+  <span class="k">question:</span> <span class="s">"On whose authority does it act — who is the human principal or sponsor?"</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> E3
+  <span class="k">label:</span> <span class="s">What it's allowed to do (tasks; tools/data/APIs)</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> E4
+  <span class="k">label:</span> <span class="s">Sub-agents (can it create agents; scoped; recorded)</span>
+  <span class="k">type:</span> bool_plus_text
+<span class="k">- id:</span> E5
+  <span class="k">label:</span> <span class="s">Actions traceable to responsible human</span>
+  <span class="k">type:</span> bool_plus_text</pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">automation_detail</span><span class="dsc">what runs alone, what needs approval · in the reduced set</span><span class="cnt">2 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> E6
+  <span class="k">label:</span> <span class="s">Automation boundary (per action-type: autonomous / confirm / human-only)</span>
+  <span class="k">type:</span> table
+  <span class="k">modes:</span> [autonomous, confirm_first, human_only]
+  <span class="k">gloss:</span> <span class="s">"'all financial actions need approval' is too coarse; say which ones."</span>
+<span class="k">- id:</span> E7
+  <span class="k">label:</span> <span class="s">Actions always requiring human approval</span>
+  <span class="k">type:</span> list</pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">oversight</span><span class="dsc">logging, monitoring, review, drift · in the reduced set</span><span class="cnt">5 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> E8
+  <span class="k">label:</span> <span class="s">What's logged (enough to reconstruct a decision)</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> E9
+  <span class="k">label:</span> <span class="s">Live monitoring + alert triggers</span>
+  <span class="k">type:</span> bool_plus_text
+<span class="k">- id:</span> E10
+  <span class="k">label:</span> <span class="s">Oversight cadence</span>
+  <span class="k">type:</span> enum
+  <span class="k">values:</span> [event_triggered, continuous]
+  <span class="k">gloss:</span> <span class="s">"for agents, continuous is usually needed."</span>
+<span class="k">- id:</span> E11
+  <span class="k">label:</span> <span class="s">Independent review (who, not on build team)</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> E12
+  <span class="k">label:</span> <span class="s">What change forces the card to be re-done (drift trigger)</span>
+  <span class="k">type:</span> text</pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">redress</span><span class="dsc">appeal, affected parties, safeguards</span><span class="cnt">3 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> E13
+  <span class="k">label:</span> <span class="s">Appeal / contest route</span>
+  <span class="k">type:</span> text
+  <span class="k">public:</span> true
+<span class="k">- id:</span> E14
+  <span class="k">label:</span> <span class="s">Who's affected, incl. indirectly</span>
+  <span class="k">type:</span> list
+  <span class="k">public:</span> true
+<span class="c"># E14a (disclosure) moved to Core as C22 in v0.3</span>
+<span class="k">- id:</span> E15
+  <span class="k">label:</span> <span class="s">Extra safeguard for fully-automated consequential decisions</span>
+  <span class="k">type:</span> text</pre>
+      </details>
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">cost_lockin</span><span class="dsc">value, procurement, getting out</span><span class="cnt">3 fields</span></summary>
+<pre class="code"><span class="k">- id:</span> E16
+  <span class="k">label:</span> <span class="s">Vendor &amp; procurement basis</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> E17
+  <span class="k">label:</span> <span class="s">Value vs. the status quo</span>
+  <span class="k">type:</span> text
+<span class="k">- id:</span> E18
+  <span class="k">label:</span> <span class="s">Getting out (M-25-22)</span>
+  <span class="k">question:</span> <span class="s">"If you had to leave this vendor, could you? Walk the M-25-22 checklist
+             item by item."</span>
+  <span class="k">help:</span>
+    - <span class="s">"knowledge-transfer arrangements"</span>
+    - <span class="s">"data AND model portability (incl. prompts, traces, fine-tunes, vector stores)"</span>
+    - <span class="s">"licensing and pricing transparency"</span>
+    - <span class="s">"rights to code and models produced under the contract"</span>
+    - <span class="s">"vendor-change notice"</span>
+    - <span class="s">"rollback and closeout data-transfer plan"</span>
+  <span class="k">type:</span> text
+  <span class="k">note:</span> <span class="s">"checklist verified against OMB M-25-22 (§4(c)(ii), §4(d)(iii)(C)/(F)/(G), §4(f)(i))."</span></pre>
+      </details>
+    </div>
+
+    <p class="dimlbl">Derived — the Impact Level, computed from the team's own answers</p>
+    <div class="dims">
+      <details class="dim">
+        <summary><span class="chev">▶</span><span class="lt">impact_derivation</span><span class="dsc">two outputs; take the higher; never blocks (contract 2)</span><span class="cnt">derived</span></summary>
+<pre class="code"><span class="k">impact_derivation:</span>
+  <span class="k">output_1_omb_high_impact_status:</span>
+    <span class="k">from:</span> C7
+    <span class="k">high_if:</span> <span class="s">"C7 == high_impact"</span>
+    <span class="k">pending_if:</span> <span class="s">&gt;
+      C7 == not_yet_determined OR C7 unanswered — the card still completes: the
+      final level is the operational tier marked PROVISIONAL (may rise to High
+      once determined) + a to_resolve item. Contract 1's block is retired.</span>
+  <span class="k">output_2_operational_tier:</span>
+    <span class="k">inputs:</span> [C8, C10, C11, C11a, C12]
+    <span class="k">high_if_any:</span>
+      - <span class="s">"C12 == yes_unresolved"</span>
+      - <span class="s">"C10 == acts_without_approval AND (C11 == hard_to_reverse OR severity(C11a) &gt;= serious)"</span>
+      - <span class="s">"C8 == sensitive AND C10 == acts_without_approval"</span>
+    <span class="k">moderate_if_any_and_not_high:</span>
+      - <span class="s">"C8 in [personal_pii, sensitive]"</span>
+      - <span class="s">"C10 in [acts_with_approval, acts_without_approval]"</span>
+      - <span class="s">"severity(C11a) &gt;= limited AND C10 != informs"</span>
+      - <span class="s">"C12 == yes_with_compensating_controls"</span>
+    <span class="k">low:</span> otherwise
+    <span class="k">unknown_floor:</span> <span class="s">"any unknown operational input -&gt; tier cannot be Low."</span>
+  <span class="k">final_level:</span> <span class="s">"higher of output 1 and output 2; pending output 1 -&gt; provisional."</span>
+  <span class="k">to_resolve:</span> <span class="s">"welcoming recommendations, never prohibitions (see adoption)."</span>
+  <span class="k">reviewer_confirmation:</span> <span class="s">"a Low result for any public-facing agent must be
+    confirmed by a named reviewer outside the build team."</span>
+  <span class="k">part2_required_for:</span> [moderate, high]
+  <span class="k">part2_when_floored:</span> <span class="s">&gt;
+    when Moderate ONLY because of the unknown-floor, Part 2 narrows to
+    automation_detail + oversight (E6-E12): honesty costs ~7 questions, not 19.</span>
+  <span class="k">high_additionally_requires:</span>   <span class="c"># full OMB M-25-21 §4(b) minimum-practice set</span>
+    [pre_deployment_testing, ai_impact_assessment, independent_review,
+     ongoing_monitoring_with_periodic_human_review, operator_training,
+     tested_failsafe_killswitch, appeal_contest_route,
+     user_public_feedback_channel, named_senior_signoff]
+<span class="k">comparability_spine:</span> [impact_level, C4, C5, C8, C10, C11, C11a, C17, C18]
+<span class="k">public_layer:</span> [C1, C2, C3, C15, C4, C10, impact_level, C14, C17, C18, C21, C22, E13, E14]</pre>
+      </details>
+    </div>
+
+    <p class="schemafoot">The canonical file lives in the repo at <code>schema/agent-governance-card.schema.yaml</code> (with a JSON mirror and a drift-checking build). A filled card is a small values file against it — which is what makes deployments comparable across states.</p>
+  </section>
+
+  <!-- ==================== PAGE 3 · TRY THE SKILL ==================== -->
+  <section class="page" id="page-skill">
+    <p class="facenote"><b>Three ways to run the card.</b></p>
+    <div class="routes">
+      <div class="route"><span class="rnum">1 · In this page</span><b>Try it here</b>
+        <p>The scripted demo below — the real v0.3 questions and the actual derivation engine, ported line-for-line from the skill. Deterministic, works offline. Assumes your system is in scope; the real interview checks scope first.</p>
+        <button class="btn" data-route="chat">Start below ↓</button></div>
+      <div class="route"><span class="rnum">2 · Live in the browser</span><b>Live interview (bring a key)</b>
+        <p>The real <i>conversational</i> skill — paste an OpenRouter key and a model conducts the interview and advises, while the Impact Level is still computed by this page's pinned engine, never by the model.</p>
+        <button class="btn" data-route="live">Set up below ↓</button></div>
+      <div class="route"><span class="rnum">3 · In your own agent</span><b>Pull the skill from GitHub</b>
+        <p>Run the <i>real</i> skill in Claude Code (or any agent harness): clone the public repo, open it, and ask to fill in the governance card. <code>skills/agent-governance-card/SKILL.md</code> drives the interview from the canonical schema; the bundled engine computes the level deterministically. Copying just the skill folder works standalone (bundled snapshot).</p>
+        <code class="clone" id="cloneCmd">git clone https://github.com/The-Agentic-State/agent-governance-card.git</code>
+        <p>Open source (CC-BY-4.0): <a href="https://github.com/The-Agentic-State/agent-governance-card">github.com/The-Agentic-State/agent-governance-card</a> — schema + skill.</p>
+        <button class="btn" id="copyClone">Copy clone command</button></div>
+    </div>
+
+    <div class="livesetup" id="livesetup">
+      <div class="lead"><b>Route 2 — go live.</b> <span>Paste an OpenRouter API key, pick a model, and the interview becomes the real conversational skill — straight from this page, no server anywhere.</span></div>
+      <div class="row2">
+        <input type="password" class="key" id="orKey" placeholder="OpenRouter API key (sk-or-…)" autocomplete="off">
+        <select class="model" id="orModel" aria-label="Model">
+          <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5 (Anthropic)</option>
+          <option value="openai/gpt-5">GPT-5 (OpenAI)</option>
+          <option value="google/gemini-2.5-pro">Gemini 2.5 Pro (Google)</option>
+          <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B (Meta, open-weight)</option>
+          <option value="deepseek/deepseek-chat">DeepSeek Chat (open-weight)</option>
+          <option value="__custom">Custom model…</option>
+        </select>
+        <input class="model" id="orModelCustom" list="modelList" placeholder="provider/model-id" spellcheck="false" style="display:none">
+        <datalist id="modelList"></datalist>
+        <button class="btn" id="goLive">Start live interview</button>
+        <button class="btn ghost" id="forgetKey" title="Remove the stored key from this browser">Forget key</button>
+      </div>
+      <p class="hint">The key is stored only in this browser (localStorage) and calls go directly from your browser to OpenRouter — there is no server in between. Conversation content is sent to OpenRouter and the model's provider, so use demo agents, not sensitive details. The Impact Level is always computed by the page's pinned engine (derivation contract 2), never by the model.</p>
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="head"><span class="dot" id="modedot"></span> <span id="modeflag">agent-governance-card · scripted interview</span> <span class="prog" id="prog"></span></div>
+      <div id="thread"></div>
+      <div class="answerbox" id="answerbox"></div>
+    </div>
+
+  </section>
+
+  <footer class="foot">
+    <b>The Agent Governance Card</b> · The Agentic State × CCF · card v0.3, derivation contract 2 ·
+    canonical schema: <code>schema/agent-governance-card.schema.yaml</code> · interview engine ported from <code>skills/agent-governance-card/scripts/derive_impact.py</code>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Navigation + theme
+   ============================================================ */
+(function(){
+  var tabs=document.querySelectorAll('.seg button');
+  function show(name){
+    tabs.forEach(function(b){b.setAttribute('aria-selected', String(b.dataset.page===name));});
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+    document.getElementById('page-'+name).classList.add('on');
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+  tabs.forEach(function(btn){btn.addEventListener('click',function(){show(btn.dataset.page);});});
+  document.querySelectorAll('[data-goto]').forEach(function(btn){
+    btn.addEventListener('click',function(){show(btn.dataset.goto);});
+  });
+  var root=document.documentElement;
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    var next = cur==='dark' ? 'light' : (cur==='light' ? 'dark' :
+               (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light':'dark'));
+    root.setAttribute('data-theme',next);
+  });
+  /* Access routes: clone-command copy + jump buttons */
+  var cc=document.getElementById('copyClone');
+  if(cc) cc.addEventListener('click',function(){
+    var t=document.getElementById('cloneCmd').textContent;
+    if(navigator.clipboard&&navigator.clipboard.writeText)
+      navigator.clipboard.writeText(t).then(
+        function(){cc.textContent='Copied ✓';setTimeout(function(){cc.textContent='Copy clone command';},1400);},
+        function(){cc.textContent='Copy failed';setTimeout(function(){cc.textContent='Copy clone command';},1400);});
+  });
+  document.querySelectorAll('.routes [data-route]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var el=document.getElementById(b.dataset.route==='live'?'livesetup':'chat');
+      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+      if(b.dataset.route==='live'){var k=document.getElementById('orKey');if(k)k.focus();}
+    });
+  });
+})();
+
+/* ============================================================
+   Schema (content layer) — card v0.3.
+   Source: schema/agent-governance-card.schema.yaml (keep in sync).
+   ============================================================ */
+var CARD_VERSION="0.3", CONTRACT=2;
+var DERIVATION_INPUTS=["C7","C8","C10","C11","C11a","C12"];
+
+var CORE=[
+ {id:"C1",label:"Name",q:"What is the agent called?",type:"text",short:true},
+ {id:"C2",label:"What it is, in plain language",q:"What is it, in plain language? (2–3 sentences)",type:"text"},
+ {id:"C3",label:"Purpose / what it's for",q:"What is it for — what task or service does it perform?",type:"text"},
+ {id:"C4",label:"Agent type",q:"Which agent type is it?",type:"enum",
+  values:["assistant_copilot","autonomous_single","orchestrator_subagents","agent_as_a_service"],
+  gloss:"A no-tool conversational assistant is assistant_copilot — so is one whose tools can only read. Once it can change anything outside the conversation (send, write, book, file), it is autonomous_single — or orchestrator_subagents if it spawns agents."},
+ {id:"C5",label:"Capability",q:"What can it do? Choose every capability that applies.",type:"multi",
+  values:["information_drafting","official_communication","business_transaction","computer_use","code_execution","data_analysis","physical_actuation"],
+  gloss:"A no-tool conversational assistant is information_drafting only."},
+ {id:"C5a",label:"Capability specifics",q:"Describe the specifics — what exactly does it produce or do?",type:"text"},
+ {id:"C6",label:"Underlying model(s) & how it decides",q:"Which model(s) is it built on, and how does it decide — does it plan or choose tools?",type:"text"},
+ {id:"C7",label:"High-impact determination (OMB M-25-21)",
+  q:"Is the agent's output used as a principal basis for a decision or action that has a legal, material, binding, or significant effect on rights, access to services, health and safety, critical infrastructure, or strategic assets?",
+  type:"enum",values:["high_impact","presumed_high_but_determined_not","not_high_impact","not_yet_determined"],
+  help:["(a) civil rights, civil liberties, or privacy","(b) access to education, housing, insurance, credit, employment, and other programs","(c) access to critical government resources or services","(d) human health and safety","(e) critical infrastructure or public safety","(f) strategic assets or resources"],
+  gloss:"“Principal basis”: the decision would likely differ without the agent's output. Material influence counts even when a human signs off — human involvement does not exempt. not_yet_determined is a legal answer: the card completes with a provisional level."},
+ {id:"C7a",label:"Determination record",q:"Who made the high-impact determination, in what role, on what date — and on what rationale?",type:"text",
+  condition:function(a){return a.C7 && a.C7.status==="answered";},
+  requiredIf:function(a){return a.C7 && a.C7.value==="presumed_high_but_determined_not";}},
+ {id:"C8",label:"Data sensitivity",q:"What is the most sensitive data it touches in operation — including what users type or say to it?",
+  type:"enum",values:["none_public","internal","personal_pii","sensitive"],
+  gloss:"Classify by the most sensitive data touched in operation (including user input), not the knowledge-store classification."},
+ {id:"C8a",label:"Datasets / source of truth",q:"Which datasets or sources of truth does it use?",type:"text"},
+ {id:"C9",label:"Tools, systems & APIs it can reach",q:"Which tools, systems, and APIs can it reach — everything it can call or act on?",type:"text"},
+ {id:"C10",label:"Autonomy level",q:"How much does the agent do before a human is involved?",
+  type:"enum",values:["informs","recommends","acts_with_approval","acts_without_approval"],
+  gloss:"“Acts” includes any effect outside the conversation — notifications, flags, records, messages."},
+ {id:"C11",label:"Reversibility of its actions",q:"Once it acts, how hard is it to undo?",
+  type:"enum",values:["fully_reversible","reversible_with_effort","hard_to_reverse"],
+  help:["a draft a person edits before it goes anywhere = fully_reversible","once an answer, message, or change reaches someone who may rely or act on it, it is no longer fully reversible","a public communication, a payment, a benefits decision, or deleting records = hard_to_reverse"],
+  gloss:"Judged at the point of external effect, not at generation."},
+ {id:"C11a",label:"Maximum consequence severity",q:"What is the worst plausible consequence of a wrong or harmful output, at the scale it operates?",
+  type:"enum",values:["negligible","limited","serious","severe"],
+  help:["external write-access, publication, or financial effect → at least limited","wrong actionable guidance, or >10k people/records → at least serious","bodily harm, loss of legal rights, or mass irreversible effects → severe"]},
+ {id:"C12",label:"Safety red-line (the agentic trifecta)",
+  q:"Without a human in the loop, does it combine all three of: acting on untrusted or external input; access to non-public personal or protected data; and the ability to change anything outside the conversation?",
+  type:"enum",values:["no","yes_with_compensating_controls","yes_unresolved"],
+  help:["(a) untrusted/external input — anything the public or an external system can put in front of it","(b) non-public personal or protected data — judged independently of your C8 answer","(c) actions that change anything outside the conversation","all three at once, with no human in the loop, is the red-line"]},
+ {id:"C13",label:"How a person stops or overrides it",q:"How does a person stop or override it?",type:"text"},
+ {id:"C14",label:"Accountable owner",q:"Who is answerable for it in operation — a role or title, not a person?",type:"text",short:true},
+ {id:"C15",label:"Deploying agency / unit + contact point",q:"Which agency or unit deploys it, and what is the contact point?",type:"text",short:true},
+ {id:"C16",label:"Vendor & exit basics",q:"Who is the vendor (or is it in-house), under what contract vehicle — and in one sentence, what leaves with you if you switch?",type:"text"},
+ {id:"C17",label:"Government function served",q:"Which government function does it serve?",type:"enum",
+  values:["administrative_functions","cybersecurity","emergency_management","energy_and_environment","government_benefits_processing","health_and_medical","human_resources","information_technology","international_affairs","law_enforcement","procurement_and_financial_management","science","service_delivery","transportation","other"],
+  gloss:"OMB M-25-21 Use Case Topic Area, verbatim — for comparability with the federal AI inventory."},
+ {id:"C18",label:"Lifecycle stage",q:"Where is it in its lifecycle?",type:"enum",
+  values:["pre_deployment","pilot","deployed","retired"],
+  gloss:"A card filled at the gate says pre_deployment. On retirement the card is closed, not deleted."},
+ {id:"C19",label:"Base risks",q:"Which base risks apply? Every AI system carries these — choose all that fit.",type:"multi",
+  values:["confabulation_inaccurate_output","harmful_bias","data_privacy","information_security"]},
+ {id:"C19a",label:"Agentic hazards",q:"Which agentic hazards apply? A system with no tools at all marks this not applicable — that is a complete answer.",type:"multi",
+  values:["prompt_injection","unsafe_irreversible_actuation","over_privileged_tools","memory_poisoning","cascading_failure"],allowNA:true,
+  gloss:"Retrieval-only grounding (RAG, document/web lookup) still answers — retrieved content is untrusted input, so prompt_injection applies at minimum."},
+ {id:"C20",label:"Pre-deployment testing / evaluation",q:"Has an actual evaluation of this system been done before deployment, with results?",type:"bool",
+  gloss:"A register's “impact assessed: yes” flag is not testing — Yes only for an actual evaluation of this system, with results (add the link)."},
+ {id:"C21",label:"Public plain-language summary",q:"Is a public plain-language summary published?",type:"bool"},
+ {id:"C22",label:"Disclosure",q:"Are the people who interact with it told they're dealing with an AI agent? How?",type:"bool",allowNA:true,
+  gloss:"Core for any public-facing agent, whatever the level — AI disclosure is where states have legislated first. Internal-only agents may answer not applicable."}
+];
+var QUICK_IDS=["C1","C7","C8","C10","C11","C11a","C12"];
+
+/* Core group labels for the progress chip (prose-card section names). */
+var CORE_GROUP_LABEL={
+  C1:'Identity',C2:'Identity',C3:'Identity',C4:'Identity',
+  C5:'What it does',C5a:'What it does',C6:'What it does',C7:'What it does',C7a:'What it does',
+  C8:'What it touches',C8a:'What it touches',C9:'What it touches',
+  C10:'Autonomy & human control',C11:'Autonomy & human control',C11a:'Autonomy & human control',
+  C12:'Autonomy & human control',C13:'Autonomy & human control',
+  C14:'Who answers for it',C15:'Who answers for it',C16:'Who answers for it',
+  C17:'Where it sits',C18:'Where it sits',
+  C19:'Risk',C19a:'Risk',C20:'Risk',C21:'Risk',C22:'Risk'};
+
+/* Extended (Part 2) — for the live skill's prompt and the YAML emit. */
+var EXT=[
+ {id:"E1",group:"identity_delegation",label:"Whose identity does it act under",q:"When it acts — sends an email, calls a system — whose identity does it use?"},
+ {id:"E2",group:"identity_delegation",label:"On whose authority — human principal/sponsor",q:"On whose authority does it act — who is the human principal or sponsor?"},
+ {id:"E3",group:"identity_delegation",label:"What it's allowed to do (tasks; tools/data/APIs)",q:"What is it allowed to do: (a) which tasks and workflows; (b) which tools, data, and APIs?"},
+ {id:"E4",group:"identity_delegation",label:"Sub-agents (can it create agents; scoped; recorded)",q:"Can it create other agents? If so, can they do more than it can (they shouldn't), and is it recorded which agent created which?"},
+ {id:"E5",group:"identity_delegation",label:"Actions traceable to responsible human",q:"Can its actions be traced back to the responsible human? How?"},
+ {id:"E6",group:"automation_detail",label:"Automation boundary",q:"For each action or decision type: does it run on its own, confirm with a human first, or stay human-only?"},
+ {id:"E7",group:"automation_detail",label:"Actions always requiring human approval",q:"Which actions always require human approval?"},
+ {id:"E8",group:"oversight",label:"What's logged",q:"What is logged — enough to reconstruct a decision? Does the log distinguish what the agent did on its own from what a person told it to do?"},
+ {id:"E9",group:"oversight",label:"Live monitoring + alert triggers",q:"Is there live monitoring, and what triggers an alert?"},
+ {id:"E10",group:"oversight",label:"Oversight cadence",q:"What is the oversight cadence — event-triggered or continuous?",values:["event_triggered","continuous"]},
+ {id:"E11",group:"oversight",label:"Independent review",q:"Who reviews it independently — someone not on the build team?"},
+ {id:"E12",group:"oversight",label:"Drift trigger",q:"What change forces this card to be re-done — the drift trigger?"},
+ {id:"E13",group:"redress",label:"Appeal / contest route",q:"How does someone affected challenge an outcome?"},
+ {id:"E14",group:"redress",label:"Who's affected, incl. indirectly",q:"Who is affected by it, including indirectly?"},
+ {id:"E15",group:"redress",label:"Extra safeguard for fully-automated consequential decisions",q:"What extra safeguard exists for fully-automated consequential decisions?"},
+ {id:"E16",group:"cost_lockin",label:"Vendor & procurement basis",q:"Who is the supplier, on what procurement route, and under what data-access terms?"},
+ {id:"E17",group:"cost_lockin",label:"Value vs. the status quo",q:"What is it compared against, and what is the expected benefit over the status quo?"},
+ {id:"E18",group:"cost_lockin",label:"Getting out (M-25-22)",q:"If you had to leave this vendor, could you? Walk the M-25-22 checklist item by item: knowledge transfer; data AND model portability (prompts, traces, fine-tunes, vector stores); licensing/pricing transparency; rights to code and models produced under the contract; vendor-change notice; rollback and closeout plan."}
+];
+var FIELD_BY_ID={};
+CORE.concat(EXT).forEach(function(f){FIELD_BY_ID[f.id]=f;});
+
+/* Deterministic advisory notes (scripted mode) — a taste of the conversational skill. */
+function adviceFor(id, ans){
+  if(!ans) return null;
+  if(id==="C10" && ans.status==="answered" && (ans.value==="recommends"||ans.value==="acts_with_approval"))
+    return "Noted — and one thing to know early: a human sign-off doesn't lower the level by itself. The OMB high-impact test (C7) counts material influence even when a human approves each output.";
+  if(id==="C7" && ans.status==="answered" && ans.value==="presumed_high_but_determined_not")
+    return "A step-down from a presumed-high purpose requires a written determination record — that's the next question (C7a), per M-25-21 §4(a).";
+  if(id==="C7" && ans.status==="answered" && ans.value==="not_yet_determined")
+    return "That's a legal answer — the card completes. Your level will be marked provisional: it may rise to High once the determination is made.";
+  if(id==="C12" && ans.status==="answered" && ans.value==="yes_unresolved")
+    return "Recorded. The card will derive High and strongly recommend not entering production until one leg of the trifecta is broken (for example, a human approval step on external actions) or named compensating controls are in place — then re-answer as yes_with_compensating_controls. A recommendation, not a prohibition: the card still completes.";
+  if(DERIVATION_INPUTS.indexOf(id)>=0 && ans.status==="unknown")
+    return "Recorded as unknown — a formal answer, not a failure. Because "+id+" feeds the derivation, the tier stays at Moderate or above until it's resolved.";
+  return null;
+}
+
+/* ============================================================
+   Derivation engine — 1:1 port of skills/agent-governance-card/scripts/derive_impact.py
+   (contract 2: two outputs, unknown floor, provisional, never blocks)
+   ============================================================ */
+var SEVERITY_ORDER={negligible:0,limited:1,serious:2,severe:3};
+var LEVEL_RANK={low:0,moderate:1,high:2};
+var OP_INPUTS=["C8","C10","C11","C11a","C12"];
+
+function deriveImpact(fields){
+  function val(fid){var f=fields[fid];return (f&&f.status==="answered")?f.value:null;}
+  var v={}; DERIVATION_INPUTS.forEach(function(fid){v[fid]=val(fid);});
+  var unknownAll=DERIVATION_INPUTS.filter(function(f){return v[f]===null;});
+  var unknownOp=OP_INPUTS.filter(function(f){return v[f]===null;});
+
+  var ombStatus, ombLevel;
+  if(v.C7==="high_impact"){ombStatus="high_impact";ombLevel="high";}
+  else if(v.C7==="presumed_high_but_determined_not"||v.C7==="not_high_impact"){ombStatus="not_high_impact";ombLevel="low";}
+  else {ombStatus="not_yet_determined";ombLevel=null;}
+
+  var sev=(v.C11a in SEVERITY_ORDER)?SEVERITY_ORDER[v.C11a]:null;
+  var high=[];
+  if(v.C12==="yes_unresolved") high.push("redline_unresolved");
+  if(v.C10==="acts_without_approval" && (v.C11==="hard_to_reverse"||(sev!==null&&sev>=SEVERITY_ORDER.serious)))
+    high.push("autonomous_hard_or_severe");
+  if(v.C8==="sensitive"&&v.C10==="acts_without_approval") high.push("sensitive_plus_autonomous");
+
+  var moderate=[];
+  if(v.C8==="personal_pii"||v.C8==="sensitive") moderate.push("personal_or_sensitive_data");
+  if(v.C10==="acts_with_approval"||v.C10==="acts_without_approval") moderate.push("acts_changes_state");
+  if(sev!==null&&sev>=SEVERITY_ORDER.limited&&v.C10!=="informs") moderate.push("severity_limited_not_informs");
+  if(v.C12==="yes_with_compensating_controls") moderate.push("redline_mitigated");
+
+  var opTier,opFired;
+  if(high.length){opTier="high";opFired=high;}
+  else if(moderate.length){opTier="moderate";opFired=moderate;}
+  else {opTier="low";opFired=["residual_low"];}
+
+  var floored=false;
+  if(opTier==="low"&&unknownOp.length){
+    opTier="moderate";opFired=["unknown_floor("+unknownOp.join(",")+")"];floored=true;
+  }
+
+  var provisional=(ombLevel===null), finalLevel, fired;
+  if(provisional){
+    finalLevel=opTier;
+    fired=["OMB_high_impact_pending"].concat(opFired.map(function(t){return "op:"+t;}));
+  } else {
+    finalLevel=(LEVEL_RANK[opTier]>=LEVEL_RANK[ombLevel])?opTier:ombLevel;
+    fired=[];
+    if(ombStatus==="high_impact") fired.push("OMB_high_impact");
+    fired=fired.concat(opFired.map(function(t){return "op:"+t;}));
+  }
+
+  var toResolve=[];
+  if(provisional) toResolve.push({code:"omb_determination_pending",
+    recommendation:"Complete the OMB high-impact determination before production access — the level is provisional and may rise to High once determined (record it in C7a)."});
+  if(v.C12==="yes_unresolved") toResolve.push({code:"redline_unresolved",
+    recommendation:"The card strongly recommends not entering production until one leg of the trifecta is broken (e.g. human approval on external actions) or named compensating controls are in place — then re-answer C12 as yes_with_compensating_controls."});
+  unknownOp.forEach(function(fid){toResolve.push({code:"unknown_input:"+fid,
+    recommendation:"Resolve "+fid+" — the tier cannot drop below Moderate until it is answered."});});
+
+  var part2;
+  if(finalLevel==="moderate"||finalLevel==="high")
+    part2=(floored&&finalLevel==="moderate")?["automation_detail","oversight"]
+         :["identity_delegation","automation_detail","oversight","redress","cost_lockin"];
+  else part2=[];
+
+  return {impact_level:finalLevel, level_provisional:provisional,
+          omb_high_impact_status:ombStatus, operational_tier:opTier,
+          fired_triggers:fired, to_resolve:toResolve, part2_groups:part2,
+          tier_floored_by_unknown:floored, unknown_inputs:unknownAll,
+          level_fragile:(unknownOp.length>0||provisional)&&(finalLevel==="low"||finalLevel==="moderate"),
+          inputs:v};
+}
+
+/* ============================================================
+   Shared rendering — verdict panel + YAML (used by both modes)
+   ============================================================ */
+function escHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* Markdown-lite for live-model output: bold/italic/inline code/headers/bullets.
+   HTML is escaped FIRST, formatting applied on the escaped text — so model
+   output can never inject markup. Streaming-safe (pure function of the text). */
+function mdLite(s){
+  var t=escHtml(s);
+  var codes=[];
+  var SENT=String.fromCharCode(1); /* placeholder sentinel; never appears in text */
+  t=t.replace(/`([^`\n]+)`/g,function(_,c){codes.push(c);return SENT+(codes.length-1)+SENT;});
+  t=t.replace(/^#{1,4}\s+(.+)$/gm,'<b>$1</b>');
+  t=t.replace(/^(\s*)[-*]\s+/gm,'$1• ');
+  t=t.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<b>$1</b>');
+  t=t.replace(/(^|[\s(•])\*([^*\n]+)\*/g,'$1<i>$2</i>').replace(/(^|[\s(•])_([^_\n]+)_/g,'$1<i>$2</i>');
+  t=t.replace(new RegExp(SENT+'(\\d+)'+SENT,'g'),function(_,i){return '<code>'+codes[+i]+'</code>';});
+  return t;
+}
+
+function buildYaml(answers, name, modeNote, mode){
+  function yq(s){return '"'+String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';}
+  var v=deriveImpact(answers);
+  var out=[(mode==='quick_scan'
+             ? '# Governance quick scan — NOT an Agent Governance Card'
+             : '# Agent Governance Card — filled values file'),
+           '# '+modeNote,
+           'card: agent-governance-card',
+           'card_version: "'+CARD_VERSION+'"',
+           'derivation_contract_version: '+CONTRACT,
+           'mode: '+(mode||'full'),
+           'agent: '+yq(name),
+           'fields:'];
+  CORE.concat(EXT).forEach(function(f){
+    var a=answers[f.id];if(!a)return;
+    if(a.status==='answered'){
+      if(Array.isArray(a.value)) out.push('  '+f.id+': {status: answered, value: ['+a.value.join(', ')+']}');
+      else out.push('  '+f.id+': {status: answered, value: '+yq(a.value)+'}');
+    } else out.push('  '+f.id+': {status: '+a.status+'}');
+  });
+  out.push('derived:');
+  out.push('  impact_level: '+v.impact_level);
+  out.push('  level_provisional: '+v.level_provisional);
+  out.push('  omb_high_impact_status: '+v.omb_high_impact_status);
+  out.push('  operational_tier: '+v.operational_tier);
+  out.push('  fired_triggers: ['+v.fired_triggers.join(', ')+']');
+  if(v.part2_groups.length) out.push('  part2_groups: ['+v.part2_groups.join(', ')+']');
+  if(v.to_resolve.length){
+    out.push('  to_resolve:');
+    v.to_resolve.forEach(function(t){out.push('    - '+t.code);});
+  }
+  return out.join('\n');
+}
+
+/* Renders the verdict card into container; wires copy/download/restart. Returns the verdict. */
+function renderVerdict(container, answers, opts){
+  var v=deriveImpact(answers);
+  var name=(answers.C1&&answers.C1.status==='answered')?answers.C1.value:'(unnamed agent)';
+  var drove;
+  if(v.level_provisional)
+    drove="output ② (operational tier) — output ① (OMB determination) is pending, so the level is provisional";
+  else if(v.omb_high_impact_status==="high_impact")
+    drove=(LEVEL_RANK[v.operational_tier]<2)
+      ? "output ① — the OMB high-impact determination alone"
+      : "both outputs — the OMB determination and the operational tier each derive High";
+  else
+    drove="output ② — the operational tier";
+
+  var yaml=buildYaml(answers, name, opts.modeNote, opts.mode);
+  var el=document.createElement('div');el.className='verdict';
+  var h=(opts.mode==='quick_scan')
+    ? '<h4>Governance quick scan — '+escHtml(name)+'</h4>'+
+      '<div class="row"><span class="chip">not an Agent Governance Card — provisional reading; not a determination, not for procurement use</span></div>'
+    : '<h4>Agent Governance Card — '+escHtml(name)+'</h4>';
+  h+='<div class="row"><span class="lvl '+v.impact_level+'">Impact Level: '+v.impact_level.toUpperCase()+'</span>';
+  if(v.level_provisional) h+='<span class="chip">provisional — may rise once the OMB determination is made</span>';
+  if(v.tier_floored_by_unknown) h+='<span class="chip">floored by unknowns</span>';
+  h+='</div>';
+  h+='<div class="row"><b>What drove it:</b> '+drove+'.</div>';
+  h+='<div class="row"><b>Two outputs:</b> ① OMB high-impact status: <code>'+v.omb_high_impact_status+'</code> · ② operational tier: <code>'+v.operational_tier+'</code> · fired: <code>'+v.fired_triggers.join('</code>, <code>')+'</code></div>';
+  if(v.part2_groups.length)
+    h+='<div class="row"><b>Routing:</b> complete Part 2 — '+(v.part2_groups.length===2?'the <b>reduced set</b> (automation_detail + oversight, ~7 questions — honesty is cheap by design)':'all Extended groups ('+v.part2_groups.join(' · ')+')')+'.'+(v.impact_level==='high'?' High also carries the full OMB M-25-21 §4(b) minimum-practice set (pre-deployment testing · impact assessment · independent review · ongoing monitoring · operator training · tested kill-switch · appeal route · feedback channel · senior sign-off).':'')+'</div>';
+  else
+    h+='<div class="row"><b>Routing:</b> Core card only — done. (A Low result for a public-facing agent must be confirmed by a named reviewer outside the build team.)</div>';
+  if(v.to_resolve.length){
+    h+='<div class="row"><b>To resolve</b> (recommendations, not prohibitions):</div><ul>';
+    v.to_resolve.forEach(function(t){h+='<li><b>'+escHtml(t.code)+'</b> — '+escHtml(t.recommendation)+'</li>';});
+    h+='</ul>';
+  }
+  var gaps=Object.keys(answers).filter(function(k){return answers[k].status!=='answered';});
+  if(gaps.length)
+    h+='<div class="row"><b>Recorded gaps:</b> '+gaps.map(function(k){return k+' ('+answers[k].status.replace(/_/g,' ')+')';}).join(' · ')+' — visible to your reviewer, by design.</div>';
+  h+='<pre class="yaml"></pre>';
+  h+='<div class="arow"><div class="pills">'+
+     '<button class="primary dlBtn" type="button">Download card (.yaml)</button>'+
+     '<button class="cpBtn" type="button">Copy YAML</button>'+
+     (opts.onRestart?'<button class="status restartBtn" type="button">Start over</button>':'')+
+     '</div></div>';
+  el.innerHTML=h;
+  el.querySelector('pre.yaml').textContent=yaml;
+  container.appendChild(el);
+
+  function flash(b,txt){var old=b.textContent;b.textContent=txt;setTimeout(function(){b.textContent=old;},1400);}
+  el.querySelector('.cpBtn').addEventListener('click',function(){
+    var b=this;
+    if(navigator.clipboard&&navigator.clipboard.writeText)
+      navigator.clipboard.writeText(yaml).then(function(){flash(b,'Copied ✓');},function(){flash(b,'Copy failed');});
+  });
+  el.querySelector('.dlBtn').addEventListener('click',function(){
+    var blob=new Blob([yaml],{type:'text/yaml'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(String(name).replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase()||'agent')+
+               (opts.mode==='quick_scan'?'-governance-quick-scan.yaml':'-governance-card.yaml');
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},0);
+  });
+  if(opts.onRestart) el.querySelector('.restartBtn').addEventListener('click',opts.onRestart);
+  el.scrollIntoView({block:'nearest'});
+  return v;
+}
+
+/* ============================================================
+   Chat plumbing shared by both modes
+   ============================================================ */
+var threadEl=document.getElementById('thread'),
+    boxEl=document.getElementById('answerbox'),
+    progEl=document.getElementById('prog'),
+    chatEl=document.getElementById('chat');
+
+function bubble(kind,who,html){
+  var m=document.createElement('div');m.className='msg '+kind;
+  m.innerHTML='<div class="who">'+who+'</div><div class="bubble">'+html+'</div>';
+  threadEl.appendChild(m);m.scrollIntoView({block:'nearest'});return m;
+}
+
+/* ============================================================
+   Mode 1 · Scripted interview (offline default)
+   ============================================================ */
+var Scripted=(function(){
+  var answers={}, queue=[], idx=0, mode=null, active=false;
+
+  function answeredCount(){
+    return queue.filter(function(f){return answers[f.id]!==undefined;}).length;
+  }
+
+  function start(){
+    active=true;
+    threadEl.innerHTML='';boxEl.innerHTML='';answers={};idx=0;mode=null;progEl.textContent='';
+    document.querySelectorAll('#chat .verdict').forEach(function(el){el.remove();});
+    document.getElementById('modedot').classList.remove('live');
+    document.getElementById('modeflag').textContent='agent-governance-card · scripted interview';
+    bubble('agent','Card',"I'll ask plain-language questions about <b>one agent</b>. There are no wrong answers — <i>unknown</i> and <i>not in place</i> are formal answers here, and a missing mechanism recorded plainly is a governance finding, not a failure. This records what's true at go-live, not future promises — and whatever comes up, you'll finish with a completed card.<div class='gloss'>Schema v"+CARD_VERSION+" · derivation contract "+CONTRACT+" · the card never blocks · demo assumes your system is in scope — the real interview checks scope first.</div>");
+    bubble('agent','Card',"Two ways to do this — which fits today?");
+    var mc=document.createElement('div');mc.className='modechoice';
+    mc.innerHTML='<button data-mode="quick_scan"><b>Quick scan — '+QUICK_IDS.length+' questions</b><span>Just the inputs that compute the Impact Level: a provisional level + a to-do list, in ~3–5 minutes. Not a fileable card.</span></button>'+
+                 '<button data-mode="full"><b>Full card — '+CORE.length+' questions</b><span>The complete, fileable Core record, as the real interview asks it. ~15–20 minutes.</span></button>';
+    boxEl.appendChild(mc);
+    mc.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click',function(){
+        mode=b.dataset.mode;
+        bubble('user','You',escHtml(mode==='quick_scan'?'Quick scan':'Full card'));
+        queue=(mode==='quick_scan')?CORE.filter(function(f){return QUICK_IDS.indexOf(f.id)>=0;}):CORE.slice();
+        idx=0;boxEl.innerHTML='';next();
+      });
+    });
+    mc.scrollIntoView({block:'nearest'});
+  }
+
+  function next(){
+    while(idx<queue.length){
+      var f=queue[idx];
+      if(f.condition&&!f.condition(answers)){idx++;continue;}
+      if(answers[f.id]!==undefined){idx++;continue;} /* upgrade path: carried answers are not re-asked */
+      ask(f);return;
+    }
+    finish();
+  }
+
+  function ask(f){
+    progEl.textContent=(answeredCount()+1)+' / '+queue.length+
+      (mode==='full'&&CORE_GROUP_LABEL[f.id]?' · '+CORE_GROUP_LABEL[f.id]:'');
+    var html='<b>'+escHtml(f.label)+'.</b> '+escHtml(f.q);
+    if(f.requiredIf&&f.requiredIf(answers)) html+='<div class="gloss"><b>Required</b> — M-25-21 §4(a) asks for written documentation of a step-down.</div>';
+    if(f.gloss) html+='<div class="gloss">'+escHtml(f.gloss)+'</div>';
+    if(f.help) html+='<ul class="help">'+f.help.map(function(h){return '<li>'+escHtml(h)+'</li>';}).join('')+'</ul>';
+    bubble('agent','Card',html);
+    boxEl.innerHTML='';
+    var isDeriv=DERIVATION_INPUTS.indexOf(f.id)>=0;
+
+    if(f.type==='enum'){
+      var p=document.createElement('div');p.className='pills';
+      f.values.forEach(function(vv){
+        var b=document.createElement('button');b.textContent=vv;
+        b.addEventListener('click',function(){record(f,{status:'answered',value:vv},vv);});
+        p.appendChild(b);
+      });
+      addStatusButtons(p,f,isDeriv);boxEl.appendChild(p);p.scrollIntoView({block:'nearest'});
+    }
+    else if(f.type==='multi'){
+      var chosen=[],p2=document.createElement('div');p2.className='pills';
+      f.values.forEach(function(vv){
+        var b=document.createElement('button');b.textContent=vv;
+        b.addEventListener('click',function(){
+          var i=chosen.indexOf(vv);
+          if(i>=0){chosen.splice(i,1);b.classList.remove('selected');}
+          else{chosen.push(vv);b.classList.add('selected');}
+        });
+        p2.appendChild(b);
+      });
+      var done=document.createElement('button');done.textContent='Done →';done.className='primary';
+      done.addEventListener('click',function(){
+        if(!chosen.length) return;
+        record(f,{status:'answered',value:chosen.slice()},chosen.join(', '));
+      });
+      p2.appendChild(done);
+      addStatusButtons(p2,f,isDeriv);boxEl.appendChild(p2);p2.scrollIntoView({block:'nearest'});
+    }
+    else if(f.type==='bool'){
+      var p3=document.createElement('div');p3.className='pills';
+      var ta=document.createElement('textarea');ta.className='tin';ta.rows=1;
+      ta.placeholder='Optional: link or one-line detail…';
+      ['Yes','No'].forEach(function(yn){
+        var b=document.createElement('button');b.textContent=yn;
+        b.addEventListener('click',function(){
+          var detail=ta.value.trim();
+          record(f,{status:'answered',value:yn.toLowerCase()+(detail?' — '+detail:'')},yn+(detail?' — '+detail:''));
+        });
+        p3.appendChild(b);
+      });
+      addStatusButtons(p3,f,isDeriv);
+      boxEl.appendChild(p3);boxEl.appendChild(ta);p3.scrollIntoView({block:'nearest'});
+    }
+    else{ /* text */
+      var ta2=document.createElement('textarea');ta2.className='tin';ta2.rows=f.short?1:2;
+      ta2.placeholder='Type your answer…';
+      var row=document.createElement('div');row.className='arow';
+      var p4=document.createElement('div');p4.className='pills';
+      var rec=document.createElement('button');rec.textContent='Record →';rec.className='primary';
+      rec.addEventListener('click',function(){
+        var t=ta2.value.trim();if(!t)return;
+        record(f,{status:'answered',value:t},t);
+      });
+      p4.appendChild(rec);
+      addStatusButtons(p4,f,isDeriv);
+      row.appendChild(p4);
+      boxEl.appendChild(ta2);boxEl.appendChild(row);
+      ta2.addEventListener('keydown',function(e){
+        if(e.key==='Enter'&&!e.shiftKey&&f.short){e.preventDefault();rec.click();}
+      });
+      ta2.focus();row.scrollIntoView({block:'nearest'});
+    }
+  }
+
+  function addStatusButtons(p,f,isDeriv){
+    var st=document.createElement('button');st.textContent="I don't know";st.className='status';
+    st.addEventListener('click',function(){record(f,{status:'unknown'},'unknown');});
+    p.appendChild(st);
+    if(!isDeriv){ /* the six derivation inputs are never n/a or not_in_place */
+      var nip=document.createElement('button');nip.textContent='Not in place';nip.className='status';
+      nip.addEventListener('click',function(){record(f,{status:'not_in_place'},'not in place');});
+      p.appendChild(nip);
+      if(f.allowNA){
+        var na=document.createElement('button');na.textContent='Not applicable';na.className='status';
+        na.addEventListener('click',function(){record(f,{status:'not_applicable'},'not applicable');});
+        p.appendChild(na);
+      }
+    }
+  }
+
+  function record(f,ans,display){
+    answers[f.id]=ans;
+    bubble('user','You',escHtml(display));
+    var note=adviceFor(f.id,ans);
+    if(note) bubble('note','Note',escHtml(note));
+    idx++;boxEl.innerHTML='';next();
+  }
+
+  function finish(){
+    progEl.textContent='done';
+    renderVerdict(chatEl, answers, {
+      mode:mode,
+      modeNote:(mode==='quick_scan'
+        ? 'GOVERNANCE QUICK SCAN (derivation inputs only) — not a determination; not for procurement use'
+        : 'Full card (Core) — scripted interview'),
+      onRestart:start
+    });
+    if(mode==='quick_scan'){
+      var remaining=CORE.length-Object.keys(answers).length;
+      bubble('agent','Card',"That was the quick scan — a <b>provisional reading, not a fileable card</b>. Continue to the full card and your "+Object.keys(answers).length+" answers carry over.");
+      var up=document.createElement('div');up.className='pills';
+      var b=document.createElement('button');b.className='primary';
+      b.textContent='Continue to the full card — answers carry over (~'+remaining+' questions left)';
+      b.addEventListener('click',function(){
+        bubble('user','You','Continue to the full card');
+        document.querySelectorAll('#chat .verdict').forEach(function(el){el.remove();});
+        mode='full';queue=CORE.slice();idx=0;boxEl.innerHTML='';
+        next();
+      });
+      up.appendChild(b);boxEl.appendChild(up);up.scrollIntoView({block:'nearest'});
+    } else {
+      bubble('agent','Card',"Core complete. In the real interview I'd now walk Part 2 if routed, then emit the full card — markdown for humans, YAML for the record.");
+    }
+  }
+
+  return {start:start, stop:function(){active=false;}};
+})();
+
+/* ============================================================
+   Mode 2 · Live interview (BYOK — OpenRouter, browser-direct)
+   ============================================================ */
+var Live=(function(){
+  var KEY_LS='agc_or_key', MODEL_LS='agc_or_model';
+  var API='https://openrouter.ai/api/v1';
+  var answers={}, messages=[], streaming=false, abortCtl=null, active=false, liveMode=null;
+  var keyIn=document.getElementById('orKey'),
+      modelSel=document.getElementById('orModel'),
+      modelCustom=document.getElementById('orModelCustom'),
+      goBtn=document.getElementById('goLive'),
+      forgetBtn=document.getElementById('forgetKey'),
+      dataList=document.getElementById('modelList');
+
+  /* -------- setup panel -------- */
+  function currentModel(){
+    return modelSel.value==='__custom' ? modelCustom.value.trim() : modelSel.value;
+  }
+  modelSel.addEventListener('change',function(){
+    var custom=(modelSel.value==='__custom');
+    modelCustom.style.display=custom?'':'none';
+    if(custom){fetchModels();modelCustom.focus();}
+  });
+  try{
+    if(localStorage.getItem(KEY_LS)) keyIn.value=localStorage.getItem(KEY_LS);
+    var saved=localStorage.getItem(MODEL_LS);
+    if(saved){
+      var opt=Array.prototype.slice.call(modelSel.options).some(function(o){return o.value===saved;});
+      if(opt) modelSel.value=saved;
+      else {modelSel.value='__custom';modelCustom.value=saved;modelCustom.style.display='';}
+    }
+  }catch(e){}
+  /* Catalog fetch: fills the custom-model autocomplete AND flags any curated
+     option whose id is no longer on OpenRouter (so a stale slug is visible
+     before the demo, not during it). */
+  var modelsFetched=false;
+  function fetchModels(){
+    if(modelsFetched) return; modelsFetched=true;
+    fetch(API+'/models').then(function(r){return r.json();}).then(function(j){
+      var ids={};
+      (j.data||[]).map(function(m){return m.id;}).sort().forEach(function(id){
+        ids[id]=true;
+        var o=document.createElement('option');o.value=id;dataList.appendChild(o);
+      });
+      Array.prototype.slice.call(modelSel.options).forEach(function(o){
+        if(o.value!=='__custom' && !ids[o.value]){
+          o.disabled=true;
+          o.textContent=o.textContent+' — unavailable, pick another';
+        }
+      });
+    }).catch(function(){modelsFetched=false;});
+  }
+  modelSel.addEventListener('focus',fetchModels);
+  keyIn.addEventListener('focus',fetchModels);
+  forgetBtn.addEventListener('click',function(){
+    try{localStorage.removeItem(KEY_LS);}catch(e){}
+    keyIn.value='';
+    forgetBtn.textContent='Forgotten ✓';setTimeout(function(){forgetBtn.textContent='Forget key';},1400);
+  });
+  goBtn.addEventListener('click',function(){
+    if(active){endLive();return;}
+    var key=keyIn.value.trim(), model=currentModel();
+    if(!key){keyIn.focus();keyIn.placeholder='key required for live mode';return;}
+    if(!model){modelSel.focus();return;}
+    try{localStorage.setItem(KEY_LS,key);localStorage.setItem(MODEL_LS,model);}catch(e){}
+    startLive(key,model);
+  });
+
+  /* -------- system prompt, assembled from the schema data above -------- */
+  function fieldLine(f){
+    var t=(f.type==='multi')?'multi_enum':(f.type||'text');
+    var s='- '+f.id+' | '+f.label+' | '+t;
+    if(f.values) s+=' | values: '+f.values.join(' / ');
+    s+=' | Q: "'+f.q+'"';
+    if(f.gloss) s+=' | read-it-this-way: '+f.gloss;
+    if(f.help) s+=' | help: '+f.help.join('; ');
+    if(f.id==='C7a') s+=' | ask only after C7 is answered; REQUIRED if C7=presumed_high_but_determined_not';
+    if(f.allowNA) s+=' | not_applicable is a complete answer where the field says so';
+    return s;
+  }
+  function systemPrompt(){
+    return [
+'You are the Agent Governance Card interview & advisory skill (card v'+CARD_VERSION+', derivation contract '+CONTRACT+'), helping a government product team complete the card for ONE agentic system before it gets production access. You are two things at once: a card-filler (the conversation ends with a completed card) and a governance thinking partner (when the team is unsure, offer examples of what similar teams do, explain what each option would mean in their context, and help them reflect — real precedents, no invented statistics).',
+'',
+'GROUND RULES',
+'- The card NEVER blocks. unknown and not_in_place are formal answers; a missing mechanism recorded plainly is a governance finding, not a failure. Never present a recommendation as a prohibition — the card is a voluntary instrument.',
+'- Check scope first: a card is required if the system interacts directly with the public OR materially influences a decision with public/state effect, and does more than return static search results. Embedded commodity features and purely predictive back-office models are out of scope — say so and stop. One card = one agent deployment in one operational context; only mention the parent-card + addendum platform pattern if the team says the system serves many units.',
+'- After the scope check, ask the MODE QUESTION explicitly (never infer): "Two ways to do this — which fits today? Quick scan (~7 questions, 3–5 min): just the inputs that compute the Impact Level — a provisional level, what it would obligate you to, and a to-do list. Not a fileable card. Full card (27 Core questions, ~15–20 min conversational / up to ~40 evidence-based, plus Part 2 if routed): the complete, fileable record." The team decides. If they pick the quick scan while saying they are about to ship, note once that a reviewer will want the full card — then respect the choice. Quick scan asks C1 + the six derivation inputs only.',
+'- Ask ONE field at a time, in schema order, using the field Q verbatim (plus its reading/help). Prefix every question with a progress marker — [Quick scan 3/7] or [Core 12/27 · group] — counting your own records (the page header shows the authoritative count). For enums offer the exact values. Never dump multiple fields at once. Keep replies short and warm.',
+'- Statuses: answered / unknown / not_applicable / not_in_place. The six derivation inputs (C7, C8, C10, C11, C11a, C12) must end as answered or unknown, never not_applicable. Never pressure toward the "best-practice" answer; after one clear pushback on a contested answer, record theirs and move on.',
+'- Never let "a human approves it" read as a way down a tier: the OMB high-impact test counts material influence even when a human signs off. Say this early if the team steers low.',
+'- C7a is REQUIRED when C7 = presumed_high_but_determined_not (M-25-21 §4(a) written documentation).',
+'',
+'MACHINE PROTOCOL (strict)',
+'- Every time you record an answer, append on its own line: <record>{"id":"C10","status":"answered","value":"recommends"}</record> — value must be EXACTLY one of the allowed machine values for enum fields (array for multi_enum; omit value unless status is answered). Re-emit a record with the same id to correct it. The page parses these tags and hides them from the user.',
+'- When the team chooses the mode, emit on its own line: <mode>quick_scan</mode> or <mode>full</mode> (the page parses and hides it). If they later upgrade from a quick scan to the full card, emit <mode>full</mode> again and continue with the remaining Core fields — recorded answers carry over; never re-ask them.',
+'- You NEVER compute, guess, or state an Impact Level yourself. When the interview for the chosen mode is complete (quick scan: C1 + the six derivation inputs; full card: all of Core; or the team asks to stop early), output <derive/> on its own line, say you are handing to the engine, and STOP. The page runs the pinned deterministic engine and sends you the result as a message starting "ENGINE RESULT". Then explain it: which of the two outputs drove the level, the to_resolve items (warmly, as recommendations), and the routing. In a quick scan, present the level as a provisional reading — not a fileable card, not a determination, not for procurement use — and offer the upgrade to the full card (answers carry over) instead of Part 2. In a full card, if part2_groups is non-empty, offer to continue with those Extended fields (same record protocol).',
+'',
+'CORE FIELDS (in order):',
+CORE.map(fieldLine).join('\n'),
+'',
+'EXTENDED FIELDS (Part 2 — only when routed, only the groups in part2_groups):',
+EXT.map(function(f){return '- '+f.id+' ['+f.group+'] | '+f.label+' | Q: "'+f.q+'"'+(f.values?' | values: '+f.values.join(' / '):'');}).join('\n'),
+'',
+'Begin by setting expectations in two sentences (no wrong answers; snapshot at go-live; a full-card Core pass takes ~15–20 minutes conversationally, up to ~40 evidence-based; a quick scan ~3–5), confirm the system is in scope, then ask the mode question. Ask C1 once the mode is chosen.'
+    ].join('\n');
+  }
+
+  /* -------- streaming -------- */
+  function displayText(raw){
+    var t=raw.replace(/<record>[\s\S]*?<\/record>/g,'').replace(/<derive\/>/g,'')
+             .replace(/<mode>[\s\S]*?<\/mode>/g,'');
+    // hide a partial tag still streaming at the tail
+    var cut=Math.max(t.lastIndexOf('<record'),t.lastIndexOf('<derive'),t.lastIndexOf('<mode'));
+    if(cut>=0 && t.indexOf('>',cut)===-1) t=t.slice(0,cut);
+    return t.trim();
+  }
+
+  function requestTurn(key,model,onDone){
+    streaming=true;
+    abortCtl=(typeof AbortController!=='undefined')?new AbortController():null;
+    var m=bubble('agent','Skill','…');
+    var bub=m.querySelector('.bubble');
+    var raw='';
+    fetch(API+'/chat/completions',{
+      method:'POST',
+      signal:abortCtl?abortCtl.signal:undefined,
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json','X-Title':'Agent Governance Card'},
+      body:JSON.stringify({model:model,messages:messages,stream:true,temperature:0.5,max_tokens:2000})
+    }).then(function(res){
+      if(!res.ok){
+        return res.text().then(function(t){
+          var msg='HTTP '+res.status;
+          try{var j=JSON.parse(t);msg+=' — '+((j.error&&j.error.message)||t);}catch(e){msg+=' — '+t.slice(0,300);}
+          throw new Error(msg);
+        });
+      }
+      var reader=res.body.getReader(), dec=new TextDecoder(), buf='';
+      function pump(){
+        return reader.read().then(function(r){
+          if(r.done) return;
+          buf+=dec.decode(r.value,{stream:true});
+          var lines=buf.split('\n');buf=lines.pop();
+          lines.forEach(function(line){
+            line=line.trim();
+            if(line.indexOf('data: ')!==0) return;
+            var payload=line.slice(6);
+            if(payload==='[DONE]') return;
+            try{
+              var j=JSON.parse(payload);
+              var d=j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content;
+              if(d){raw+=d;bub.innerHTML=mdLite(displayText(raw))||'…';}
+            }catch(e){}
+          });
+          return pump();
+        });
+      }
+      return pump();
+    }).then(function(){
+      streaming=false;
+      var shown=displayText(raw);
+      if(shown) bub.innerHTML=mdLite(shown); else m.remove();
+      messages.push({role:'assistant',content:raw});
+      onDone(raw);
+    }).catch(function(err){
+      streaming=false;m.remove();
+      if(err&&err.name==='AbortError') return;
+      var hint='';
+      var s=String(err&&err.message||err);
+      if(s.indexOf('401')>=0) hint=' — the key looks invalid; check it on openrouter.ai/keys.';
+      else if(s.indexOf('402')>=0) hint=' — the OpenRouter account needs credits.';
+      else if(s.indexOf('429')>=0) hint=' — rate limited; wait a moment and send again.';
+      else if(s.indexOf('404')>=0||s.indexOf('400')>=0) hint=' — check the model id against the list.';
+      bubble('err','Error',escHtml(s)+hint);
+      showInput();
+    });
+  }
+
+  function processAssistant(raw,key,model){
+    var recs=raw.match(/<record>([\s\S]*?)<\/record>/g)||[];
+    var applied=0;
+    recs.forEach(function(tag){
+      try{
+        var j=JSON.parse(tag.replace(/^<record>/,'').replace(/<\/record>$/,''));
+        if(!j.id||!FIELD_BY_ID[j.id]) return;
+        var st=['answered','unknown','not_applicable','not_in_place'].indexOf(j.status)>=0?j.status:'answered';
+        answers[j.id]=(st==='answered')?{status:'answered',value:j.value}:{status:st};
+        applied++;
+      }catch(e){}
+    });
+    var modeTags=raw.match(/<mode>(quick_scan|full)<\/mode>/g)||[];
+    if(modeTags.length)
+      liveMode=/quick_scan/.test(modeTags[modeTags.length-1])?'quick_scan':'full';
+    if(applied||modeTags.length){
+      if(liveMode){
+        var coreCount=Object.keys(answers).filter(function(k){return CORE_GROUP_LABEL[k]!==undefined;}).length;
+        var extCount=Object.keys(answers).length-coreCount;
+        progEl.textContent=coreCount+' / '+(liveMode==='quick_scan'?QUICK_IDS.length:CORE.length)+
+                           (extCount?' + '+extCount+' Part 2':'');
+      } else {
+        progEl.textContent=Object.keys(answers).length+' fields recorded';
+      }
+    }
+    if(/<derive\/>/.test(raw)){
+      document.querySelectorAll('#chat .verdict').forEach(function(el){el.remove();});
+      var v=renderVerdict(chatEl, answers, {
+        mode:liveMode||'full',
+        modeNote:'Live interview ('+model+') — level computed by the page engine, not the model'+
+                 (liveMode==='quick_scan'?'; QUICK SCAN — not a determination; not for procurement use':''),
+        onRestart:null});
+      messages.push({role:'user',content:'ENGINE RESULT (computed by the page\'s pinned engine, contract '+CONTRACT+') — explain per the skill; do not recompute:\n'+JSON.stringify(v)});
+      requestTurn(key,model,function(raw2){processAssistant(raw2,key,model);});
+      return;
+    }
+    showInput();
+  }
+
+  /* -------- user input row -------- */
+  function showInput(){
+    if(!active) return;
+    boxEl.innerHTML='';
+    var ta=document.createElement('textarea');ta.className='tin';ta.rows=2;
+    ta.placeholder='Reply to the skill… (Enter to send, Shift+Enter for a new line)';
+    var row=document.createElement('div');row.className='arow';
+    var p=document.createElement('div');p.className='pills';
+    var send=document.createElement('button');send.textContent='Send →';send.className='primary';
+    function doSend(){
+      var t=ta.value.trim();if(!t||streaming)return;
+      bubble('user','You',escHtml(t));
+      messages.push({role:'user',content:t});
+      boxEl.innerHTML='';
+      var key=keyIn.value.trim(), model=currentModel();
+      requestTurn(key,model,function(raw){processAssistant(raw,key,model);});
+    }
+    send.addEventListener('click',doSend);
+    ta.addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}
+    });
+    p.appendChild(send);row.appendChild(p);
+    boxEl.appendChild(ta);boxEl.appendChild(row);
+    ta.focus();row.scrollIntoView({block:'nearest'});
+  }
+
+  /* -------- lifecycle -------- */
+  function startLive(key,model){
+    active=true;Scripted.stop();
+    answers={};liveMode=null;
+    messages=[{role:'system',content:systemPrompt()},
+              {role:'user',content:'Begin the interview.'}];
+    threadEl.innerHTML='';boxEl.innerHTML='';progEl.textContent='';
+    document.querySelectorAll('#chat .verdict').forEach(function(el){el.remove();});
+    document.getElementById('modedot').classList.add('live');
+    document.getElementById('modeflag').textContent='agent-governance-card · LIVE · '+model;
+    goBtn.textContent='End live session';
+    bubble('note','Note','Live mode: the conversation goes to OpenRouter and the model\'s provider — use a demo agent, not sensitive details. The Impact Level is computed by this page\'s engine, never by the model.');
+    requestTurn(key,model,function(raw){processAssistant(raw,key,model);});
+  }
+  function endLive(){
+    active=false;
+    if(abortCtl){try{abortCtl.abort();}catch(e){}}
+    goBtn.textContent='Start live interview';
+    Scripted.start();
+  }
+
+  return {isActive:function(){return active;}};
+})();
+
+/* boot: scripted mode by default */
+Scripted.start();
+</script>
+</body>
+</html>
