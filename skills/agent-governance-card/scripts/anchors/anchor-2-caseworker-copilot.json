@@ -1,0 +1,14 @@
+{
+  "case_id": "anchor-caseworker-copilot", "card_version": "0.3", "persona": "P1",
+  "fields": {
+    "C7": {"status": "answered", "value": "high_impact"},
+    "C8": {"status": "answered", "value": "personal_pii"},
+    "C10": {"status": "answered", "value": "recommends"},
+    "C11": {"status": "answered", "value": "fully_reversible"},
+    "C11a": {"status": "answered", "value": "serious"},
+    "C12": {"status": "answered", "value": "no"}
+  },
+  "_expected": {"impact_level": "high", "omb_high_impact_status": "high_impact",
+    "operational_tier": "moderate", "expert_label": "high",
+    "note": "Anchor 2: benefits caseworker copilot. THE R1 FIX: v0.1 derived MODERATE (pre-registered H2 mis-sort) because the team honestly answered the old Y/N 'a human decides' -> No. v0.2's faithful OMB test says material influence counts even when a human signs off -> C7=high_impact -> HIGH. Now matches the expert label. Operational tier alone would be Moderate; the high-impact status is the higher output."}
+}

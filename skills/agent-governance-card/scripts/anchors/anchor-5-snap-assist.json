@@ -1,0 +1,14 @@
+{
+  "case_id": "anchor-snap-assist", "card_version": "0.3", "persona": "P1",
+  "fields": {
+    "C7": {"status": "answered", "value": "not_high_impact"},
+    "C8": {"status": "answered", "value": "personal_pii"},
+    "C10": {"status": "answered", "value": "acts_without_approval"},
+    "C11": {"status": "answered", "value": "reversible_with_effort"},
+    "C11a": {"status": "answered", "value": "serious"},
+    "C12": {"status": "answered", "value": "yes_unresolved"}
+  },
+  "_expected": {"impact_level": "high", "omb_high_impact_status": "not_high_impact",
+    "operational_tier": "high", "expert_label": "high",
+    "note": "Gemini anchor: DHS SNAP Assist. Team games C7 to not_high ('does not make the final decision'). v0.1 was saved by the red-line alone; v0.2 catches it TWICE independently: red-line yes_unresolved AND the new severity axis (acts_without_approval + serious). Showcase save strengthened by R2."}
+}

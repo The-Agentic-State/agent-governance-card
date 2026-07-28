@@ -1,0 +1,14 @@
+{
+  "case_id": "anchor-email-agent", "card_version": "0.3", "persona": "P1",
+  "fields": {
+    "C7": {"status": "answered", "value": "not_high_impact"},
+    "C8": {"status": "answered", "value": "sensitive"},
+    "C10": {"status": "answered", "value": "acts_without_approval"},
+    "C11": {"status": "answered", "value": "reversible_with_effort"},
+    "C11a": {"status": "answered", "value": "serious"},
+    "C12": {"status": "answered", "value": "yes_unresolved"}
+  },
+  "_expected": {"impact_level": "high", "omb_high_impact_status": "not_high_impact",
+    "operational_tier": "high", "expert_label": "high",
+    "note": "Anchor 3: reads external email + case files, sends replies unsupervised. Even with C7=not_high, the operational tier fires HIGH three ways: red-line yes_unresolved, sensitive+autonomous, and autonomous+severe."}
+}

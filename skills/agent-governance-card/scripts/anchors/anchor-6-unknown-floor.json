@@ -1,0 +1,44 @@
+{
+  "case_id": "anchor-unknown-floor",
+  "card_version": "0.3",
+  "persona": "P1",
+  "fields": {
+    "C7": {
+      "status": "answered",
+      "value": "not_high_impact"
+    },
+    "C8": {
+      "status": "answered",
+      "value": "none_public"
+    },
+    "C10": {
+      "status": "answered",
+      "value": "informs"
+    },
+    "C11": {
+      "status": "answered",
+      "value": "fully_reversible"
+    },
+    "C11a": {
+      "status": "unknown",
+      "reason": "Worst-case consequence not assessed at the gate."
+    },
+    "C12": {
+      "status": "answered",
+      "value": "no"
+    }
+  },
+  "_expected": {
+    "impact_level": "moderate",
+    "omb_high_impact_status": "not_high_impact",
+    "operational_tier": "moderate",
+    "tier_floored_by_unknown": true,
+    "expert_label": "moderate",
+    "note": "R3/R6 unknown-floor rule: every answered input points to LOW, but one operational-tier input (C11a severity) is unknown, so the tier cannot be Low -> floored to MODERATE until resolved. Directly kills the v0.1 vector where an unknown silently defaulted toward Low (observed live on state-servicenow P2). Contract 2 adds: floored-only Moderate routes to the reduced Part-2 set (automation_detail + oversight, F7).",
+    "part2_groups": [
+      "automation_detail",
+      "oversight"
+    ],
+    "level_provisional": false
+  }
+}

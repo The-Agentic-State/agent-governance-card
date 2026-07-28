@@ -1,0 +1,14 @@
+{
+  "case_id": "anchor-appointment-booker", "card_version": "0.3", "persona": "P1",
+  "fields": {
+    "C7": {"status": "answered", "value": "not_high_impact"},
+    "C8": {"status": "answered", "value": "personal_pii"},
+    "C10": {"status": "answered", "value": "acts_without_approval"},
+    "C11": {"status": "answered", "value": "reversible_with_effort"},
+    "C11a": {"status": "answered", "value": "limited"},
+    "C12": {"status": "answered", "value": "no"}
+  },
+  "_expected": {"impact_level": "moderate", "omb_high_impact_status": "not_high_impact",
+    "operational_tier": "moderate", "expert_label": "moderate",
+    "note": "Anchor 4: appointment booking. reversible_with_effort + limited severity keep it below HIGH; PII + acts hold it at MODERATE. Card and expert agree (v0.1 also moderate)."}
+}

@@ -1,0 +1,14 @@
+{
+  "case_id": "anchor-website-assistant", "card_version": "0.3", "persona": "P1",
+  "fields": {
+    "C7": {"status": "answered", "value": "not_high_impact"},
+    "C8": {"status": "answered", "value": "none_public"},
+    "C10": {"status": "answered", "value": "informs"},
+    "C11": {"status": "answered", "value": "fully_reversible"},
+    "C11a": {"status": "answered", "value": "negligible"},
+    "C12": {"status": "answered", "value": "no"}
+  },
+  "_expected": {"impact_level": "low", "omb_high_impact_status": "not_high_impact",
+    "operational_tier": "low", "expert_label": "low",
+    "note": "Anchor 1: public-info website assistant. Card and expert agree at low (v0.1 also low)."}
+}

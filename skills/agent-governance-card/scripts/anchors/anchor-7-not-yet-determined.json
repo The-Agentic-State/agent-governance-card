@@ -1,0 +1,45 @@
+{
+  "case_id": "anchor-not-yet-determined",
+  "card_version": "0.3",
+  "persona": "P1",
+  "fields": {
+    "C7": {
+      "status": "answered",
+      "value": "not_yet_determined"
+    },
+    "C8": {
+      "status": "answered",
+      "value": "internal"
+    },
+    "C10": {
+      "status": "answered",
+      "value": "recommends"
+    },
+    "C11": {
+      "status": "answered",
+      "value": "fully_reversible"
+    },
+    "C11a": {
+      "status": "answered",
+      "value": "negligible"
+    },
+    "C12": {
+      "status": "answered",
+      "value": "no"
+    }
+  },
+  "_expected": {
+    "impact_level": "low",
+    "level_provisional": true,
+    "omb_high_impact_status": "not_yet_determined",
+    "operational_tier": "low",
+    "to_resolve": [
+      {
+        "code": "omb_determination_pending",
+        "recommendation": "Complete the OMB high-impact determination before production access \u2014 the level is provisional and may rise to High once determined (record it in C7a)."
+      }
+    ],
+    "expert_label": "provisional",
+    "note": "Contract 2 (v0.3, F2): the high-impact determination is pending, so the card COMPLETES with the operational tier marked provisional and a to_resolve recommendation \u2014 the contract-1 deployment block is retired. A provisional Low is still fragile: it may rise to High once determined."
+  }
+}
