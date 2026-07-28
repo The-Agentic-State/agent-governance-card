@@ -1,31 +1,3 @@
-Agent Governance Card
-Copyright (c) 2026 The Agentic State, with the Center for Civic Futures
-
-This work — including the card schema, the interview skill, the derivation
-engine, templates, examples and documentation — is licensed under the Creative
-Commons Attribution 4.0 International License (CC BY 4.0).
-
-You may share and adapt it for any purpose, including commercially, provided
-you give appropriate credit, link to the license, and indicate if changes were
-made.
-
-  Summary:     https://creativecommons.org/licenses/by/4.0/
-  Legal code:  https://creativecommons.org/licenses/by/4.0/legalcode
-
-Suggested attribution:
-
-  Agent Governance Card, developed by The Agentic State with the Center for
-  Civic Futures, licensed CC BY 4.0.
-  https://github.com/The-Agentic-State/agent-governance-card
-
-If you adapt the card for your own jurisdiction, please keep card_version and
-derivation_contract_version in your fills, so a card can still be read against
-the rules that produced it.
-
-The full text of the license follows.
-
-=======================================================================
-
 Attribution 4.0 International
 
 =======================================================================

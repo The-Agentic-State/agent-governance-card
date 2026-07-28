@@ -64,4 +64,8 @@ Then just ask: *"help me fill in the Agent Governance Card for our new intake ag
 
 Developed by [The Agentic State](https://agenticstate.org) with the **Center for Civic Futures (CCF)**.
 
-Released under **CC BY 4.0** — use it, adapt it for your state, publish what you fill in. Attribution appreciated.
+Copyright © 2026 The Agentic State. Released under [**CC BY 4.0**](LICENSE) — use it, adapt it for your state, publish what you fill in. Share and adapt freely, including commercially, with credit:
+
+> Agent Governance Card, developed by The Agentic State with the Center for Civic Futures, licensed CC BY 4.0. https://github.com/The-Agentic-State/agent-governance-card
+
+If you adapt the card for your own jurisdiction, please keep `card_version` and `derivation_contract_version` in your fills, so a card can still be read against the rules that produced it.
