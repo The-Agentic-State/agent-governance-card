@@ -930,6 +930,10 @@
   </footer>
 </div>
 
+<!-- Shared demo key for the live interview. Empty unless set with
+     tools/set_demo_key.py; a 404 here is harmless (BYOK still works). -->
+<script src="demo-key.js"></script>
+
 <script>
 /* ============================================================
    Navigation + theme
@@ -1481,11 +1485,14 @@ var Scripted=(function(){
 var Live=(function(){
   var KEY_LS='agc_or_key', MODEL_LS='agc_or_model';
   var API='https://openrouter.ai/api/v1';
-  /* Shared demo key. Paste an OpenRouter key whose CREDIT LIMIT IS SET ON THE KEY
-     ITSELF (OpenRouter → Keys → credit limit) — this file is public, so the cap on
-     the key is the only thing bounding spend. Leave '' to fall back to bring-your-own-key.
-     Revoke and blank this after the demo window. */
-  var DEMO_KEY='';
+  /* Shared demo key, supplied by demo-key.js (set it with tools/set_demo_key.py).
+     It is base64 there so repo scrapers don't match the raw sk-or- pattern — that is
+     obfuscation, not security: this page is static, so a visitor can always read the
+     key out of devtools. The credit limit set on the key in OpenRouter is the actual
+     control. Empty ⇒ the page falls back to bring-your-own-key. */
+  var DEMO_KEY=(function(){
+    try{ return window.__AGC_DEMO ? atob(window.__AGC_DEMO) : ''; }catch(e){ return ''; }
+  })();
   var answers={}, messages=[], streaming=false, abortCtl=null, active=false, liveMode=null;
   var keyIn=document.getElementById('orKey'),
       modelSel=document.getElementById('orModel'),
