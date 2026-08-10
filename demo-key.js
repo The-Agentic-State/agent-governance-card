@@ -18,4 +18,4 @@
  * Operationally: set the key shortly before the session, revoke it in OpenRouter
  * right after, and run --clear. Never reuse this key anywhere else.
  */
-window.__AGC_DEMO = '';
+window.__AGC_DEMO = 'c2stb3ItdjEtMWM3YmMzNGM3MDU1MDA0MjE4YjNjYWYwN2ZkMzNkNzA1MGNjYmI5ZDhlMTI4MDcxYmYzMzJiZDViYjViMjE5ZQ==';
