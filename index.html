@@ -9,15 +9,17 @@
   Plain self-contained HTML+CSS+JS, no external dependencies, no build step:
   open this file in a browser, or host it anywhere (GitHub Pages works as-is).
 
-  The skill tab presents THREE access routes:
-    1. try it here (default, offline): deterministic scripted interview + the
+  The skill tab leads with ONE hero route and offers two browser demos below it:
+    HERO — install the skill in your own agent (the route for real work):
+       npx skills add The-Agentic-State/agent-governance-card
+    demo 1. try it here (offline): deterministic scripted interview + the
        derivation engine
-    2. live (bring-your-own-key): the real conversational skill over OpenRouter —
-      the visitor pastes their own API key (stored only in localStorage, calls go
-      browser -> OpenRouter directly, no server anywhere). The model records
-      answers via a <record>{json}</record> protocol and NEVER computes the
-      Impact Level: when it emits <derive/>, the page runs the pinned engine.
-    3. install the skill in your own agent: npx skills add The-Agentic-State/agent-governance-card
+    demo 2. live: the real conversational skill over OpenRouter — runs on the
+      shared demo key from demo-key.js (or the visitor's own key, stored only in
+      localStorage; calls go browser -> OpenRouter directly, no server anywhere).
+      The model records answers via a <record>{json}</record> protocol and NEVER
+      computes the Impact Level: when it emits <derive/>, the page runs the
+      pinned engine.
        (informational panel; works across Claude Code, Codex, Cursor + others)
 
   Routes 1 and 2 both open with the explicit mode question (decided 2026-07-28,
@@ -265,8 +267,22 @@
   .tin{width:100%;max-width:72ch;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
        font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg);resize:vertical;}
   .arow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center;}
-  .routes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 16px;}
-  @media (max-width:760px){.routes{grid-template-columns:1fr;}}
+  .heroroute{border:1px solid var(--accent);border-radius:12px;background:var(--accent-5);
+             padding:18px 22px;margin:14px 0 6px;}
+  .heroroute .rnum{color:var(--accent-ink);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;}
+  .heroroute>b{display:block;font-size:19px;font-weight:600;margin:6px 0 8px;}
+  .heroroute p{margin:0 0 10px;font-size:14px;color:var(--muted);line-height:1.55;max-width:88ch;}
+  .heroroute .herocmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:12px 0;}
+  .heroroute code.clone{flex:1;min-width:260px;display:block;font-family:var(--mono);font-size:13px;
+             padding:10px 14px;border:1px solid var(--accent-3);border-radius:8px;background:var(--bg);
+             overflow-x:auto;white-space:nowrap;}
+  .heroroute .herowhy{font-size:12.5px;margin:0;}
+  .heroroute .herowhy b{color:var(--ink);font-weight:600;}
+  .divider2{display:flex;align-items:center;gap:12px;margin:20px 0 10px;}
+  .divider2::before,.divider2::after{content:"";flex:1;border-top:1px dashed var(--line);}
+  .divider2 span{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .routes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:8px 0 16px;}
+  @media (max-width:760px){.routes{grid-template-columns:1fr;}.heroroute .herocmd{flex-direction:column;}}
   .routes .route{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:7px;}
   .routes .route b{font-size:14.5px;font-weight:600;}
   .routes .route .rnum{color:var(--muted);font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;}
@@ -877,25 +893,45 @@
 
   <!-- ==================== PAGE 4 · TRY THE SKILL ==================== -->
   <section class="page" id="page-skill">
-    <p class="facenote"><b>Three ways to run the card.</b></p>
-    <div class="routes">
-      <div class="route"><span class="rnum">1 · In your own agent — recommended</span><b>Install the skill in your agent</b>
-        <p>One command installs the <i>real</i> skill into your favourite coding agent (Claude Code, Codex, Cursor, and many others) — then ask it to fill in the governance card. The skill drives the interview from the canonical schema and computes the level with the bundled deterministic engine; it works standalone (bundled snapshot).</p>
+    <p class="facenote"><b>Run the card where you work.</b> The skill installs into the AI agent
+    your organisation already uses — that's the real thing. The browser versions below it are for
+    trying the card out.</p>
+
+    <div class="heroroute">
+      <span class="rnum">The skill · in your own agent</span>
+      <b>Install it where your specs and docs already live</b>
+      <p>One command installs the <i>real</i> skill into your coding agent (Claude Code, Codex,
+      Cursor, and many others) — then ask it to fill in the governance card. The skill drives the
+      interview from the canonical schema, reads answers straight out of your repo's specs and
+      docs where it can, and computes the Impact Level with the bundled deterministic engine.</p>
+      <div class="herocmd">
         <code class="clone" id="cloneCmd">npx skills add The-Agentic-State/agent-governance-card</code>
-        <p><b>This is the route for real work.</b> It runs inside the environment your organisation already procured, so nothing you type leaves it. The two browser routes below are for trying the card out, not for filing one.</p>
-        <p>Open source (CC-BY-4.0): <a href="https://github.com/The-Agentic-State/agent-governance-card">github.com/The-Agentic-State/agent-governance-card</a> — schema + skill.</p>
-        <button class="btn" id="copyClone">Copy install command</button></div>
-      <div class="route"><span class="rnum">2 · In this page</span><b>Try it here</b>
-        <p>The scripted demo below — the real v0.3 questions and the actual derivation engine, ported line-for-line from the skill. Deterministic, works offline, nothing leaves your browser. Assumes your system is in scope; the real interview checks scope first.</p>
+        <button class="btn" id="copyClone">Copy</button>
+      </div>
+      <p class="herowhy"><b>Why this is the route for real work:</b> it runs inside the environment
+      your organisation already procured, so nothing you type — or nothing the agent reads from
+      your repo — leaves it. Open source (CC-BY-4.0):
+      <a href="https://github.com/The-Agentic-State/agent-governance-card">github.com/The-Agentic-State/agent-governance-card</a>.</p>
+    </div>
+
+    <div class="divider2"><span>Or try it in this browser — demo agents only, not for filing</span></div>
+
+    <div class="routes">
+      <div class="route"><span class="rnum">Scripted walkthrough</span><b>Try it here</b>
+        <p>The real v0.3 questions and the actual derivation engine, ported line-for-line from the
+        skill. Deterministic, works offline, nothing leaves your browser. Assumes your system is in
+        scope; the real interview checks scope first.</p>
         <button class="btn" data-route="chat">Start below ↓</button></div>
-      <div class="route"><span class="rnum">3 · Live in the browser</span><b>Live interview</b>
-        <p>The real <i>conversational</i> skill — a model conducts the interview and advises, while the Impact Level is still computed by this page's pinned engine, never by the model. Use the shared demo key, or bring your own.</p>
+      <div class="route"><span class="rnum">Live interview</span><b>Talk to the skill</b>
+        <p>The real <i>conversational</i> skill — a model conducts the interview and advises, while
+        the Impact Level is still computed by this page's pinned engine, never by the model. Runs
+        on a shared demo key, or bring your own.</p>
         <button class="btn" data-route="live">Set up below ↓</button></div>
     </div>
 
     <div class="livesetup" id="livesetup">
-      <div class="lead"><b>Route 3 — go live.</b> <span>Pick a model and start — this demo runs on a shared, spend-capped key so you can try the conversational skill without setting anything up. Calls go straight from your browser to OpenRouter; there is no server anywhere.</span></div>
-      <p class="warn"><b>Do not enter sensitive information.</b> What you type is sent to OpenRouter and the model's provider. Use a demo or hypothetical agent — never real case data, personal data, or anything non-public. To fill in a card for real, install the skill (route 1) and run it inside your own environment.</p>
+      <div class="lead"><b>Live interview — go.</b> <span>Pick a model and start — this demo runs on a shared, spend-capped key so you can try the conversational skill without setting anything up. Calls go straight from your browser to OpenRouter; there is no server anywhere.</span></div>
+      <p class="warn"><b>Do not enter sensitive information.</b> What you type is sent to OpenRouter and the model's provider. Use a demo or hypothetical agent — never real case data, personal data, or anything non-public. To fill in a card for real, install the skill (above) and run it inside your own environment.</p>
       <div class="row2">
         <select class="model" id="orModel" aria-label="Model">
           <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 (Anthropic)</option>
@@ -963,8 +999,8 @@
     var t=document.getElementById('cloneCmd').textContent;
     if(navigator.clipboard&&navigator.clipboard.writeText)
       navigator.clipboard.writeText(t).then(
-        function(){cc.textContent='Copied ✓';setTimeout(function(){cc.textContent='Copy install command';},1400);},
-        function(){cc.textContent='Copy failed';setTimeout(function(){cc.textContent='Copy install command';},1400);});
+        function(){cc.textContent='Copied ✓';setTimeout(function(){cc.textContent='Copy';},1400);},
+        function(){cc.textContent='Copy failed';setTimeout(function(){cc.textContent='Copy';},1400);});
   });
   document.querySelectorAll('.routes [data-route]').forEach(function(b){
     b.addEventListener('click',function(){
