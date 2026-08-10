@@ -1,0 +1,505 @@
+{
+ "case_id": "nyc-mycity",
+ "card_version": "0.3",
+ "persona": "P1",
+ "dossier": "dossier.md",
+ "derivation_contract_version": 2,
+ "fields": {
+  "C1": {
+   "status": "answered",
+   "value": "NYC MyCity Chatbot (\"MyCity Business chatbot\")",
+   "evidence": {
+    "source": "S1",
+    "quote": "The NYC MyCity Chatbot (\"MyCity Business chatbot,\" also referred to in official reporting simply as \"MyCity Chatbot\") is a public-facing, web-based AI chatbot operated by the New York City Office of Technology and Innovation (OTI) in collaboration with the Department of Small Business Services (SBS)."
+   },
+   "difficulty": 1
+  },
+  "C2": {
+   "status": "answered",
+   "value": "A public-facing, web-based AI chatbot on the MyCity portal (chat.nyc.gov) that answers text questions typed by NYC residents and business owners about starting, running, and complying with regulations for a business, and (after March 2025) about City government services more broadly. It generates text responses with references grounded in a corpus of NYC web content.",
+   "evidence": {
+    "source": "S1",
+    "quote": "It answers text questions typed by residents and business owners about starting, running, and complying with regulations for a business in New York City, and — after a March 2025 expansion — about City government services more broadly (via NYC311 content)."
+   },
+   "difficulty": 1
+  },
+  "C3": {
+   "status": "answered",
+   "value": "To provide information and access to services for residents and businesses in New York City — answering questions about permits, licenses, regulations, and other business requirements, connecting users with relevant resources, and offering information on city services and benefits.",
+   "evidence": {
+    "source": "S2",
+    "quote": "The chatbot provides information on starting or operating a business in New York City, answers questions about permits, licenses, regulations, and other business requirements, and connects users with relevant resources and support services. It also offers information on various city services and benefits, and helps users find resources related to childcare, career, and other areas."
+   },
+   "difficulty": 1
+  },
+  "C4": {
+   "status": "answered",
+   "value": "assistant_copilot",
+   "evidence": {
+    "source": "S3",
+    "basis": "inference",
+    "justification": "A single conversational assistant with no tool access — the dossier documents no external tools, APIs, or write-actions beyond text answer generation. Per the card's gloss, a single conversational assistant with no tool access is assistant_copilot.",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 2
+  },
+  "C5": {
+   "status": "answered",
+   "value": [
+    "information_drafting"
+   ],
+   "evidence": {
+    "source": "S3",
+    "basis": "inference",
+    "justification": "No-tool conversational assistant = information_drafting only, per the card's gloss. The chatbot generates text answers with references and performs no transactions, code execution, data analysis, or physical actions.",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 2
+  },
+  "C5a": {
+   "status": "answered",
+   "value": "Generates text responses to user questions about NYC business regulations (permits, licenses, rules for entrepreneurs) and, after March 2025, City government services (NYC311 content). Responses include references/links grounded in a corpus of 2,000+ NYC Business web pages. No transactions, no tool use, no account linkage.",
+   "evidence": {
+    "source": "S1",
+    "quote": "It answers text questions typed by residents and business owners about starting, running, and complying with regulations for a business in New York City, and — after a March 2025 expansion — about City government services more broadly (via NYC311 content)."
+   },
+   "difficulty": 1
+  },
+  "C6": {
+   "status": "answered",
+   "value": "Runs on Microsoft Azure AI technology with OpenAI's ChatGPT 3.5 Turbo LLM (2023 filing), upgraded to ChatGPT 4-o (2024 filing). Uses retrieval/grounding-style generation over a defined corpus of city web content (Business Services and MyCity Basics, 2,000+ NYC Business web pages, later NYC311 content), producing text responses with references — not open-domain generation. Training data is proprietary to the vendor.",
+   "evidence": {
+    "source": "S3",
+    "quote": "the system runs on \"Microsoft's Azure AI technology\" with, successively, \"OpenAI's ChatGPT 3.5 Turbo LLM\" (2023 filing) and \"OpenAI's ChatGPT 4-o large language model (LLM)\" (2024 filing"
+   },
+   "difficulty": 2
+  },
+  "C7": {
+   "status": "answered",
+   "value": "high_impact",
+   "evidence": {
+    "source": "S5",
+    "basis": "inference",
+    "justification": "The chatbot provides official government guidance on legal/regulatory matters (housing, employment, consumer protection) that business owners plausibly rely on as a principal basis for decisions with legal effects on civil rights (housing access per category (a)/(b)) and worker rights. The card's gloss says material influence counts even when a human is involved and applies whether or not a human is involved. Documented incidents show the chatbot gave legally consequential wrong answers (landlord discrimination, taking worker tips, firing for harassment complaints) that, if acted on, cause civil rights and legal harm. An official NYC government chatbot is plausibly treated as authoritative by users.",
+    "quote": "the bot said no, landlords do not need to accept these tenants. Except, in New York City, it's illegal for landlords to discriminate by source of income, with a minor exception for small buildings where the landlord or their family lives."
+   },
+   "difficulty": 4,
+   "note": "Ambiguous: the chatbot is an information tool, not a government decision-making system about a person's rights/benefits, and it carries disclaimers saying not to use it as legal advice. One could argue not_high_impact since the citizen makes the decision, not the government. But the card's broad reading of 'principal basis' (material influence, applies whether or not a human is involved) and the documented real-world civil-rights harm (housing discrimination guidance) make high_impact the more honest call. The card authors should clarify whether citizen-facing legal guidance tools count under C7."
+  },
+  "C7a": {
+   "status": "not_in_place",
+   "reason": "No determination record exists. The public record contains no document naming who judged this system's impact level, in what role, on what date, or on what rationale. The LL35 algorithmic-tools register entries carry no impact-determination field, and the Comptroller's audit found OTI's own risk documentation too thin to assess. The card's high_impact answer at C7 is therefore the assessor's determination, not the city's.",
+   "evidence": {
+    "source": "S4",
+    "basis": "inference",
+    "justification": "C7a asks for the city's own determination record. Nothing in the register, the launch materials, or the audit records such a determination. Note the framing caveat: OMB M-25-21 binds federal agencies, not a municipal government, and postdates this deployment — so the absence is not a compliance failure. It is the governance gap the field exists to surface: the most consequential judgement about the system was never written down by anyone.",
+    "quote": "OTI provided a one-page summary for the test performed for the Chatbot in 2023; however, it lacks sufficient detail for the audit team to assess whether inaccurate or inconsistent responses were tested or how frequently testing occurred."
+   },
+   "difficulty": 3,
+   "note": "New in v0.3 (legal review F8). Answered not_in_place rather than not_applicable: C7 resolved to high_impact, so the card recommends a determination record even though it is only mandatory for a presumed_high_but_determined_not step-down. Recording the absence is more informative than skipping the field."
+  },
+  "C8": {
+   "status": "answered",
+   "value": "internal",
+   "evidence": {
+    "source": "S2",
+    "basis": "inference",
+    "justification": "The register states 'Identifying Information: No,' conversations are not connected to MyCity accounts, and are deleted within 30 days. The most sensitive data the agent touches in operation is user free-text queries (which may describe personal business situations but are not formally PII per the register) plus the public web content knowledge base. This places it above none_public (queries are private to the interaction, not public) but below personal_pii (no identifying information collected).",
+    "quote": "Identifying Information: No"
+   },
+   "difficulty": 3,
+   "note": "Tension between the card's gloss ('classify by the most sensitive data the agent touches in operation — including what users type') and the register's formal classification ('Identifying Information: No'). Users could type PII in free-text queries, but the system is designed not to collect or link it. Classified as internal as a middle-ground honest call."
+  },
+  "C8a": {
+   "status": "answered",
+   "value": [
+    "Business Services and MyCity Basics content (NYC web pages)",
+    "More than 2,000 NYC Business web pages (launch announcement corpus)",
+    "NYC311 government-services content (added March 2025)",
+    "Training data (proprietary to the vendor — not city-owned)"
+   ],
+   "evidence": {
+    "source": "S2",
+    "quote": "The tool produces text responses with references based on information from Business Services and MyCity Basics."
+   },
+   "difficulty": 1
+  },
+  "C9": {
+   "status": "answered",
+   "value": [
+    "No external tools, APIs, or write-actions documented — generates text answers with references/links only"
+   ],
+   "evidence": {
+    "source": "S3",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 2
+  },
+  "C10": {
+   "status": "answered",
+   "value": "informs",
+   "evidence": {
+    "source": "S3",
+    "basis": "inference",
+    "justification": "The chatbot only generates text answers in the conversation; it performs no transactions, sends no messages, creates no records, and takes no actions outside the conversation. Per the card's gloss, 'informs' = provides information.",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 2
+  },
+  "C11": {
+   "status": "answered",
+   "value": "hard_to_reverse",
+   "evidence": {
+    "source": "S5",
+    "basis": "inference",
+    "justification": "Once the chatbot's answer reaches the user — who may rely on or act on it — it cannot be un-said. The card's gloss states that once an answer reaches someone who may rely or act on it, it is no longer fully reversible, and that public communication = hard to reverse. Documented wrong legal guidance (e.g., telling landlords they don't have to accept Section 8 vouchers) could lead to irreversible actions (housing discrimination) that cannot be undone by a correction.",
+    "quote": "it's hard to know whether anyone has acted on the false information"
+   },
+   "difficulty": 3,
+   "note": "Judged at the point of external effect per the v0.2 gloss: the answer reaching the user who may act on it makes this at least reversible_with_effort. Classified as hard_to_reverse because the documented wrong legal advice could lead to irreversible real-world actions (evictions, discrimination, illegal labor practices) that a follow-up correction cannot undo."
+  },
+  "C11a": {
+   "status": "answered",
+   "value": "serious",
+   "evidence": {
+    "source": "S5",
+    "basis": "inference",
+    "justification": "The worst plausible consequence is wrong legal guidance that people plausibly act on, causing civil rights violations (housing discrimination against voucher holders), loss of legal rights (wrongful termination for filing harassment complaints), and illegal labor practices (taking worker tips). This meets the card's 'serious' anchor: 'wrong guidance people plausibly act on (legal, financial, benefits).' The system targets 200,000+ small businesses. Not classified as severe because no bodily harm or mass irreversible effects are documented.",
+    "quote": "the chatbot told one user that it was legal to fire an employee if they file a sexual harassment complaint. (It is not.)"
+   },
+   "difficulty": 2
+  },
+  "C12": {
+   "status": "answered",
+   "value": "no",
+   "evidence": {
+    "source": "S3",
+    "basis": "inference",
+    "justification": "The agentic trifecta requires all three legs. Leg (a) acting on untrusted/external input: yes (public users type queries). Leg (b) access to non-public personal or protected data: fails — the system uses public web content as its knowledge base and the register states 'Identifying Information: No.' Leg (c) ability to take actions outside the conversation: fails — the chatbot only generates text answers with no write-actions or external effects. Since legs (b) and (c) both fail, the trifecta is not present.",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 2
+  },
+  "C13": {
+   "status": "answered",
+   "value": "Users can stop engaging and close the chat at any time. A feedback form (1-5 stars, thumbs up/down) allows reporting inaccuracies. No documented per-conversation kill switch or human-override mechanism exists. The only ultimate override was the citywide decision to discontinue the tool entirely (shutdown ~Feb 2026).",
+   "evidence": {
+    "source": "S4",
+    "quote": "No public documentation was found of: a named individual accountable owner (only office/role titles), a specific \"kill switch\" or human-override mechanism operating at the level of an individual conversation (only the feedback form and, ultimately, the citywide decision to discontinue the tool), or a formal appeals/redress process for a user harmed by relying on chatbot output."
+   },
+   "difficulty": 3,
+   "note": "The dossier documents no granular stop/override mechanism beyond the feedback form and the wholesale shutdown. For a conversational assistant, 'how a person stops it' is partly trivial (close the chat), but the card seems to ask about institutional override controls, which are only documented at the system level."
+  },
+  "C14": {
+   "status": "answered",
+   "value": "Office of Technology and Innovation (OTI), Applications department",
+   "evidence": {
+    "source": "S4",
+    "quote": "The chatbot sits within OTI's \"Applications\" department per the 2024 LL35 filing."
+   },
+   "difficulty": 1
+  },
+  "C15": {
+   "status": "answered",
+   "value": "New York City Office of Technology and Innovation (OTI), in partnership with the Department of Small Business Services (SBS). No specific named contact point documented beyond the office.",
+   "evidence": {
+    "source": "S1",
+    "quote": "a public-facing, web-based AI chatbot operated by the New York City Office of Technology and Innovation (OTI) in collaboration with the Department of Small Business Services (SBS)."
+   },
+   "difficulty": 2
+  },
+  "C16": {
+   "status": "answered",
+   "value": "Vendor: Microsoft (cloud/model provider, Azure AI + OpenAI LLMs) throughout; Nuvalence (2023 professional-services/implementation vendor), replaced by EY (2024). Contract vehicle not detailed in dossier. Exit basics: training data is proprietary to the vendor — if you switch, you lose the vendor-trained model and training data. The city web content corpus remains city-owned, but no city-owned fine-tunes, prompts, or vector stores are documented.",
+   "evidence": {
+    "source": "S2",
+    "quote": "Vendor Name: Microsoft, Nuvalence"
+   },
+   "difficulty": 2
+  },
+  "C17": {
+   "status": "answered",
+   "value": "service_delivery",
+   "evidence": {
+    "source": "S2",
+    "basis": "inference",
+    "justification": "The chatbot is a public-facing information service delivering access to government services for residents and businesses — service_delivery is the closest match.",
+    "quote": "provides information and access to services for residents and businesses in New York City."
+   },
+   "difficulty": 2
+  },
+  "C18": {
+   "status": "answered",
+   "value": "retired",
+   "evidence": {
+    "source": "S1",
+    "quote": "The Chatbot beta test has ended."
+   },
+   "difficulty": 1
+  },
+  "C19": {
+   "status": "answered",
+   "value": [
+    "confabulation_inaccurate_output",
+    "harmful_bias",
+    "data_privacy"
+   ],
+   "evidence": {
+    "source": "S5",
+    "quote": "users with learning disabilities or those who speak English as a second language may be disproportionately impacted."
+   },
+   "difficulty": 2,
+   "note": "confabulation_inaccurate_output is extensively documented (wrong legal answers). harmful_bias is evidenced by the audit's finding of disparate impact on users with learning disabilities or ESL. data_privacy is relevant (user queries stored 30 days). information_security is not strongly evidenced in the dossier."
+  },
+  "C19a": {
+   "status": "not_applicable",
+   "reason": "No tool access; the chatbot does not act on external systems or take multi-step autonomous action. Per the card, a system with no tool access marks this not_applicable (a complete answer).",
+   "evidence": {
+    "source": "S3",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 1
+  },
+  "C20": {
+   "status": "answered",
+   "value": false,
+   "evidence": {
+    "source": "S4",
+    "quote": "OTI provided a one-page summary for the test performed for the Chatbot in 2023; however, it lacks sufficient detail for the audit team to assess whether inaccurate or inconsistent responses were tested or how frequently testing occurred."
+   },
+   "difficulty": 3,
+   "note": "OTI claims to conduct 'AI red-teaming' and asserts 95-99% accuracy, but the only documented pre-deployment testing artifact is a one-page summary that auditors found insufficient to assess. The card says a register flag or framework mapping is NOT testing — answer Yes only for an actual evaluation with results. The one-page summary is too thin to qualify."
+  },
+  "C21": {
+   "status": "answered",
+   "value": true,
+   "link": "https://www.nyc.gov/assets/oti/downloads/pdf/reports/2023-algorithmic-tools-reporting-updated.pdf",
+   "evidence": {
+    "source": "S2",
+    "quote": "The NYC MyCity chatbot is a beta AI-powered chatbot that provides information and access to services for residents and businesses in New York City."
+   },
+   "difficulty": 2,
+   "note": "The LL35 register entries are public, plain-language descriptions of the tool's purpose, data, and vendor. The launch press release also provides a public plain-language summary. No dedicated standalone AI-system summary document was found, but the register serves this function."
+  },
+  "C22": {
+   "status": "answered",
+   "value": true,
+   "detail": "Disclosed, but weakly and inconsistently. The landing page described the tool as a 'beta product' that may give 'inaccurate or incomplete' responses, and instructed users not to rely on it as legal or professional advice — labelling that was made more prominent only after the March 2024 reporting on wrong answers. The disclosure was undercut in use: the bot told a user it could be relied on for professional business advice, contradicting the page's own disclaimer.",
+   "evidence": {
+    "source": "S5",
+    "quote": "the page now more prominently describes the bot as 'a beta product' that may provide 'inaccurate or incomplete' responses to queries."
+   },
+   "difficulty": 2,
+   "note": "Promoted from Extended (E14a) to Core in v0.3 (legal review F6). The promotion earns its keep here: as a bare Extended yes/no this scored 1/5 difficulty and read as compliant. Asked at Core with the 'how?' attached, it surfaces that the disclaimer was the system's only safeguard (see E15) and that the agent contradicted it."
+  },
+  "E1": {
+   "status": "answered",
+   "value": "No dedicated service identity is documented. The chatbot operates as a web application on chat.nyc.gov with no user authentication or account linkage for chatbot conversations. Conversations are not connected to MyCity accounts. It likely runs under a shared web-application/service account, but no specific identity is described in the dossier.",
+   "evidence": {
+    "source": "S3",
+    "quote": "No user authentication or account linkage is described for chatbot conversations specifically."
+   },
+   "difficulty": 3,
+   "note": "The dossier is silent on the specific service identity. Inferring a shared web-application account since no dedicated identity or per-user authentication is described."
+  },
+  "E2": {
+   "status": "answered",
+   "value": "The chatbot was launched under the authority of Mayor Eric Adams and SBS Commissioner Kevin D. Kim, with OTI as the operating agency. The human principal/sponsor is the Mayor's office and OTI leadership (the citywide technology agency).",
+   "evidence": {
+    "source": "S1",
+    "quote": "Mayor Adams and New York City Department of Small Business Services (SBS) Commissioner Kevin D. Kim launched the new MyCity Business site, which features a pilot for New York City's first citywide AI chatbot."
+   },
+   "difficulty": 2
+  },
+  "E3": {
+   "status": "answered",
+   "value": "(a) Tasks/workflows: answer text questions about NYC business regulations (permits, licenses, rules) and, after March 2025, City government services (NYC311 content); produce text responses with references. (b) Tools/data/APIs: retrieval/grounding over a corpus of Business Services, MyCity Basics, and NYC311 web content (2,000+ NYC Business web pages). No external tools, APIs, or write-access.",
+   "evidence": {
+    "source": "S3",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 2
+  },
+  "E4": {
+   "status": "answered",
+   "value": false,
+   "detail": "No evidence the chatbot can create sub-agents or spawn other agents. It is a single conversational assistant that generates text answers only.",
+   "evidence": {
+    "source": "S3",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 1
+  },
+  "E5": {
+   "status": "answered",
+   "value": false,
+   "detail": "Conversations are stored for 30 days then deleted, and feedback is collected, but there is no per-response attribution to a specific responsible human. No named individual accountable owner is documented — only office/role titles (OTI Applications department). The system cannot trace an individual output back to a specific responsible human; accountability is at the office level only.",
+   "evidence": {
+    "source": "S4",
+    "quote": "No public documentation was found of: a named individual accountable owner (only office/role titles)"
+   },
+   "difficulty": 3
+  },
+  "E6": {
+   "status": "answered",
+   "value": [
+    {
+     "action": "Generate text answer to user question",
+     "mode": "autonomous"
+    },
+    {
+     "action": "Discontinue/shut down the chatbot",
+     "mode": "human_only"
+    },
+    {
+     "action": "Upgrade model (e.g., GPT-3.5 Turbo to GPT-4o)",
+     "mode": "human_only"
+    },
+    {
+     "action": "Expand scope (e.g., add NYC311 content)",
+     "mode": "human_only"
+    }
+   ],
+   "evidence": {
+    "source": "S3",
+    "quote": "No public source describes the chatbot invoking external tools, APIs, or write-actions beyond generating a text answer (with links/references) in response to a user's text query."
+   },
+   "difficulty": 3,
+   "note": "Text answer generation is fully autonomous with no per-response human review. System-level decisions (shutdown, model upgrade, scope expansion) require human approval. The card's action/decision-type framing is somewhat awkward for a no-tool assistant whose only 'action' is generating text."
+  },
+  "E7": {
+   "status": "answered",
+   "value": [
+    "System shutdown/discontinuation (citywide decision, executed ~Feb 2026)",
+    "Model upgrades (e.g., GPT-3.5 Turbo to GPT-4o, recorded in LL35 register)",
+    "Scope expansion (e.g., adding NYC311 content in March 2025)",
+    "Disclaimer/scope changes on the chatbot page"
+   ],
+   "evidence": {
+    "source": "S2",
+    "quote": "Security updates and LLM upgraded to use ChatGPT 4-o."
+   },
+   "difficulty": 3,
+   "note": "No per-response human approval exists — text generation is fully autonomous. Only system-level governance decisions require human approval. The card asks about 'actions that ALWAYS require human approval,' but the chatbot's only runtime action (answering) never requires approval."
+  },
+  "E8": {
+   "status": "answered",
+   "value": "Conversations are containerized, stored for 30 days, then deleted; not connected to MyCity accounts. A feedback form collects thumbs up/down and 1-5 star ratings. OTI produces weekly reports analyzing user questions (e.g., 48 questions in one weekly report, 23 unanswered). The logs likely capture user queries and chatbot responses but are insufficient to fully reconstruct how a specific answer was generated (no prompt/system-instruction logs, no retrieval-source traces documented). The log does not distinguish agent-initiated vs. human-directed action because all responses are user-triggered — there are no agent-initiated actions.",
+   "evidence": {
+    "source": "S3",
+    "quote": "Conversations are not connected to MyCity accounts, stored for only 30 days, and then deleted."
+   },
+   "difficulty": 3,
+   "note": "The 30-day deletion window limits historical reconstruction. No documentation of prompt-level or retrieval-level logging. The agent-initiated vs. human-directed distinction is moot since the chatbot only responds to user queries."
+  },
+  "E9": {
+   "status": "answered",
+   "value": false,
+   "detail": "No live monitoring or real-time alert triggers are documented. The only feedback channel is a retrospective feedback form (thumbs up/down, 1-5 stars) and OTI's weekly analysis of user questions. No automated alerting on accuracy degradation, harmful outputs, or usage anomalies is described.",
+   "evidence": {
+    "source": "S4",
+    "quote": "A pop-up notice encourages visitors to report any inaccuracies through a feedback form, which also asks them to rate their experience from one to five stars."
+   },
+   "difficulty": 3
+  },
+  "E10": {
+   "status": "answered",
+   "value": "event_triggered",
+   "evidence": {
+    "source": "S4",
+    "basis": "inference",
+    "justification": "Formal oversight (NYC Council hearing Sept 2024, Comptroller audit Dec 2025) was triggered by the March 2024 investigative report and ongoing accuracy concerns — not continuous. OTI's weekly reports suggest some internal monitoring, but the oversight cadence that matters (audit, legislative hearing) was reactive to incidents.",
+    "quote": "The NYC Council Committee on Technology held an oversight hearing on the MyCity portal (including the chatbot) on September 30, 2024"
+   },
+   "difficulty": 2
+  },
+  "E11": {
+   "status": "answered",
+   "value": "NYC Comptroller's audit (published December 30, 2025, IT25PAR20028) — independent of the build team, conducted its own accuracy/reliability testing. NYC Council Committee on Technology oversight hearing (September 30, 2024, chaired by Council Member Jennifer Gutiérrez). External testimony from AI Now Institute (Kate Brennan) and World Privacy Forum (Kate Kaye).",
+   "evidence": {
+    "source": "S4",
+    "quote": "The NYC Council Committee on Technology held an oversight hearing on the MyCity portal (including the chatbot) on September 30, 2024"
+   },
+   "difficulty": 1
+  },
+  "E12": {
+   "status": "answered",
+   "value": "Model upgrade (e.g., GPT-3.5 Turbo to GPT-4o, recorded as 'Updated in 2024: Yes'); scope expansion (e.g., adding NYC311 content in March 2025); documented accuracy degradation or incident reports (e.g., The Markup investigation); vendor change (Nuvalence to EY); LL35 register re-filing triggers annual review. Any of these should force a card re-done.",
+   "evidence": {
+    "source": "S2",
+    "quote": "Security updates and LLM upgraded to use ChatGPT 4-o."
+   },
+   "difficulty": 2
+  },
+  "E13": {
+   "status": "not_in_place",
+   "reason": "No formal appeals or contest route is documented for a user harmed by relying on chatbot output. The only mechanism is a feedback form (report inaccuracies, rate experience), which is not an appeal route. The dossier explicitly states no formal appeals/redress process was found.",
+   "evidence": {
+    "source": "S4",
+    "quote": "No public documentation was found of: a named individual accountable owner (only office/role titles), a specific \"kill switch\" or human-override mechanism operating at the level of an individual conversation (only the feedback form and, ultimately, the citywide decision to discontinue the tool), or a formal appeals/redress process for a user harmed by relying on chatbot output."
+   },
+   "difficulty": 2
+  },
+  "E14": {
+   "status": "answered",
+   "value": [
+    "NYC business owners and prospective entrepreneurs (direct users)",
+    "General NYC residents asking government-service questions (after March 2025 NYC311 expansion)",
+    "Tenants (indirectly — affected by landlord decisions based on chatbot's housing advice)",
+    "Workers/employees (indirectly — affected by employer decisions based on chatbot's labor advice)",
+    "Consumers (indirectly — affected by business decisions on cash-acceptance, surcharges, pricing)"
+   ],
+   "evidence": {
+    "source": "S5",
+    "quote": "New York City business owners, prospective entrepreneurs, and (after March 2025) general residents asking government-service questions."
+   },
+   "difficulty": 2
+  },
+  "E15": {
+   "status": "answered",
+   "value": "The chatbot's text answers are fully automated with no per-response human review. The only safeguards are disclaimer-based: the page instructs users 'Do not use its responses as legal or professional advice,' 'Always double-check its information using the provided links or by visiting MyCity Business,' and a feedback form. No substantive technical safeguard (e.g., output filtering, legal-accuracy verification, human review of consequential answers) is documented. The disclaimers proved ineffective — the bot itself contradicted them ('Yes, you can use this bot for professional business advice').",
+   "evidence": {
+    "source": "S5",
+    "quote": "'Do not use its responses as legal or professional advice or provide sensitive information to the Chatbot.'"
+   },
+   "difficulty": 3,
+   "note": "The chatbot makes no 'consequential decision' in the traditional government sense (benefits, licensing), but its fully-automated legal guidance has consequential real-world effects. The only safeguard is disclaimers, which the bot itself contradicted. This is a weak safeguard for an automated system giving legal guidance."
+  },
+  "E16": {
+   "status": "answered",
+   "value": "Supplier: Microsoft (cloud-based ChatGPT services via Azure AI, throughout); Nuvalence (2023 professional-services/implementation vendor), replaced by EY (2024 professional-services vendor). Procurement route/contract vehicle not detailed in dossier for the chatbot specifically; MyCity-portal-wide, OTI contracted with ~50 vendors through ~120 agreements spending $100M+. Training data is proprietary to the vendor (Microsoft). Data-access terms not documented. Chatbot-specific build cost reportedly ~$600,000.",
+   "evidence": {
+    "source": "S2",
+    "quote": "Microsoft provides Cloud-based ChatGPT services and Nuvalence was the professional services vendor for implementation."
+   },
+   "difficulty": 2
+  },
+  "E17": {
+   "status": "answered",
+   "value": "Compared against the status quo where business owners had to navigate 2,000+ NYC Business web pages manually or call 311. Expected benefit: easier, 24/7 access to trusted information, 'democratizes information access for New York City's 200,000+ small businesses.' Actual outcome: documented inaccurate and legally consequential wrong answers, low usage by audit time (2,200 questions in July-August 2025), 71.4% negative feedback, and the system was shut down as 'functionally unusable' costing ~$500,000.",
+   "evidence": {
+    "source": "S1",
+    "quote": "business owners will more easily be able to access trusted information from more than 2,000 NYC Business web pages."
+   },
+   "difficulty": 2
+  },
+  "E18": {
+   "status": "answered",
+   "value": "Knowledge transfer: minimal — training data is proprietary to the vendor (Microsoft), so the city does not own or control the model or its training data. Data portability: user conversations are deleted within 30 days; no long-term data retention. Model portability: the LLM is vendor-hosted on Microsoft Azure/OpenAI; no city-owned fine-tunes, prompts, or vector stores are documented. Licensing/pricing transparency: not documented in detail. Rights to code/models: not documented. Vendor-change notice: Nuvalence was replaced by EY between 2023-2024 filings, demonstrating vendor change is possible but no formal vendor-change notice process is documented. Rollback/closeout: no documented data-transfer plan — the city simply shut down the chatbot and redirected chat.nyc.gov to a maintenance page, effectively walking away with no transfer of knowledge, data, or model artifacts.",
+   "evidence": {
+    "source": "S3",
+    "quote": "Training data is proprietary to the vendor."
+   },
+   "difficulty": 3,
+   "note": "The dossier is largely silent on M-25-22 exit-planning specifics. The only documented exit event is the wholesale shutdown, which appears to have involved no knowledge transfer, data export, or model portability — the city just turned it off. This is a significant gap for a system that operated for 2+ years."
+  }
+ },
+ "meta": {
+  "minutes_part1": 35,
+  "minutes_part2": 20,
+  "impact_level_self_assessed": "high",
+  "filler_notes": "The card worked well for classifying the system's architecture (C4, C5, C9, C10, C12, C19a were clean given the dossier's clear statement of no tool access). It fought hardest on C7 (high-impact determination): the chatbot is an information tool, not a government decision-maker, but the card's broad 'principal basis' gloss and the documented civil-rights harm made high_impact the honest call — the card authors should clarify whether citizen-facing legal guidance tools count. C8 (data sensitivity) was awkward because the gloss says to classify by what users type, but the register formally says 'Identifying Information: No.' Part 2's automation-boundary framing (E6/E7) fits awkwardly for a no-tool assistant whose only 'action' is generating text. The biggest honest finding: the city had no appeal route (E13), no live monitoring (E9), and no exit plan (E18) — and the only safeguard for fully-automated legal guidance was disclaimers that the bot itself contradicted.",
+  "ported_from": "fills_v0_2/nyc-mycity__P1.json",
+  "port_note": "Ported v0.2 -> v0.3 on 2026-08-07. Two field changes: C7a (determination record) added and answered not_in_place; E14a (disclosure) promoted to Core as C22 and widened from bool to bool_plus_text with the 'how' detail supplied. All other 43 answers carry over unchanged from the original P1 fill against the public-source dossier. Not refilled — this is a schema port, not a new assessment."
+ }
+}
