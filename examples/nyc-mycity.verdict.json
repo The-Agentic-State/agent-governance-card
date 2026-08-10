@@ -1,0 +1,34 @@
+{
+  "case_id": "nyc-mycity",
+  "persona": "P1",
+  "impact_level": "high",
+  "final_level": "high",
+  "level_provisional": false,
+  "omb_high_impact_status": "high_impact",
+  "operational_tier": "low",
+  "fired_triggers": [
+    "OMB_high_impact",
+    "op:residual_low"
+  ],
+  "to_resolve": [],
+  "part2_groups": [
+    "identity_delegation",
+    "automation_detail",
+    "oversight",
+    "redress",
+    "cost_lockin"
+  ],
+  "tier_floored_by_unknown": false,
+  "boundary": false,
+  "unknown_inputs": [],
+  "unknown_operational_inputs": [],
+  "level_fragile": false,
+  "inputs": {
+    "C7": "high_impact",
+    "C8": "internal",
+    "C10": "informs",
+    "C11": "hard_to_reverse",
+    "C11a": "serious",
+    "C12": "no"
+  }
+}
