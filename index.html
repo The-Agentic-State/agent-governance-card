@@ -1744,7 +1744,9 @@ EXT.map(function(f){return '- '+f.id+' ['+f.group+'] | '+f.label+' | Q: "'+f.q+'
       bubble('user','You',escHtml(t));
       messages.push({role:'user',content:t});
       boxEl.innerHTML='';
-      var key=keyIn.value.trim(), model=currentModel();
+      /* Same fallback as goLive: an empty key field means the shared demo key.
+         Without this, a demo-key visitor 401s on their SECOND message. */
+      var key=keyIn.value.trim()||DEMO_KEY, model=currentModel();
       requestTurn(key,model,function(raw){processAssistant(raw,key,model);});
     }
     send.addEventListener('click',doSend);
