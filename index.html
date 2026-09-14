@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>The Agent Governance Card</title>
+<meta name="description" content="A per-deployment governance record for agentic AI in government: twelve dimensions, 47 fields, a computed Impact Level, and a skill that fills it in.">
+<!--
+  Agent Governance Card — site. Plain self-contained HTML+CSS+JS, no dependencies, no build
+  step for viewers: open the file or host it (GitHub Pages serves it from the repo root).
+
+  The schema section is GENERATED from skills/agent-governance-card/references/schema.snapshot.yaml
+  (card v0.4, derivation contract 3, updated 2026-09-14). Do not hand-edit the field cards:
+  regenerate the page when the schema moves. The prose (pages 1 and 3) follows the one-pager.
+-->
+<style>
+  :root {
+    --accent:#a491fc; --accent-3:#cdc4fd; --accent-5:#efecff; --accent-ink:#4a3a9e;
+    --ink:#1A2733; --muted:#6B7280; --line:#E3E0F2; --bg:#FFFFFF; --panel:#FBFAFF;
+    --code-bg:#f6f4fd; --shadow:0 1px 3px rgba(26,39,51,.06),0 8px 30px rgba(90,70,180,.06);
+    --good:#3f9d6d; --warn:#c98a2b; --crit:#c0607a;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Newsreader,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-weight:300;letter-spacing:.1px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px 90px;}
+  a{color:var(--accent-ink);}
+  button{font-family:var(--sans);}
+  code{font-family:var(--mono);}
+
+  header.top{padding:42px 0 20px;}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink);font-weight:400;margin:0 0 10px;}
+  h1.title{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(30px,5vw,46px);line-height:1.1;margin:0;text-wrap:balance;}
+
+  .bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+       position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0;border-bottom:1px solid var(--line);}
+  .seg{display:flex;flex-wrap:wrap;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px;}
+  .seg button{font-size:14px;font-weight:400;color:var(--muted);background:transparent;border:0;border-radius:7px;
+              padding:8px 14px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;}
+  .seg button:hover{color:var(--ink);}
+  .seg button[aria-selected="true"]{background:var(--accent);color:#fff;}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .page{display:none;animation:fade .25s ease;}
+  .page.on{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.page{animation:none}}
+
+  /* intro */
+  .intro{max-width:66ch;margin-top:26px;}
+  .intro p{font-size:17.5px;margin:0 0 15px;}
+  .intro p b{font-weight:400;}
+  .qas{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0 20px;}
+  @media (max-width:760px){.qas{grid-template-columns:1fr;}}
+  .qa{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px 18px;}
+  .qa .no{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);font-weight:400;margin-bottom:6px;}
+  .qa p{font-size:14px;color:var(--muted);margin:0;}
+  .qa p b{color:var(--ink);font-weight:400;}
+  .intro .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .go{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-size:13.5px;font-weight:400;cursor:pointer;}
+
+  /* schema */
+  .facenote{font-size:15px;color:var(--muted);margin:20px 0 4px;max-width:72ch;}
+  .facenote b{color:var(--ink);font-weight:400;}
+  .schemahead{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 6px;}
+  .stat{border:1px solid var(--line);border-radius:10px;padding:11px 16px;background:var(--panel);min-width:110px;}
+  .stat b{display:block;font-size:22px;font-weight:400;color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+  .stat b .of{font-size:14px;color:var(--muted);}
+  .stat span{font-size:12px;color:var(--muted);}
+  .dimlbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400;margin:22px 0 6px;}
+  .dims{display:flex;flex-direction:column;gap:8px;}
+  details.dim{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);}
+  details.dim summary{display:flex;align-items:baseline;gap:10px;padding:11px 16px;cursor:pointer;list-style:none;flex-wrap:wrap;}
+  details.dim summary::-webkit-details-marker{display:none;}
+  details.dim summary:hover .lt{color:var(--accent-ink);}
+  .dim .chev{color:var(--accent-ink);font-size:11px;transition:transform .15s;display:inline-block;}
+  details.dim[open] .chev{transform:rotate(90deg);}
+  .dim .dno{font-family:var(--mono);font-size:13px;color:var(--muted);min-width:1.4em;}
+  .dim .lt{font-weight:400;font-size:15px;}
+  .dim .cnt{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .flds{border-top:1px solid var(--line);padding:10px 12px 4px;background:var(--bg);}
+  .fld{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 13px;margin-bottom:8px;}
+  .fhead{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;}
+  .fid{font-size:11px;font-family:var(--mono);color:var(--accent-ink);background:var(--code-bg);padding:2px 7px;border-radius:5px;flex-shrink:0;}
+  .fq{flex:1;min-width:200px;}
+  .fq b{display:block;font-size:13.5px;font-weight:600;}
+  .fq > span{display:block;font-size:13px;color:var(--muted);margin-top:2px;}
+  .pubmark{color:var(--accent-ink);font-size:11px;margin-left:4px;vertical-align:1px;}
+  .fchips{display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+  .st{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;}
+  .st.cmp{border-color:var(--accent-3);color:var(--accent-ink);}
+  .st.drv{border-color:var(--warn);color:var(--warn);}
+  .vals{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;align-items:center;}
+  .vlab{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-right:2px;}
+  .chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--accent-3);color:var(--accent-ink);border-radius:20px;padding:2px 9px;background:var(--bg);}
+  ul.help{font-size:12.5px;color:var(--muted);margin:8px 0 0;padding-left:18px;}
+  ul.help li{margin:2px 0;}
+  .gloss{font-size:12.5px;color:var(--muted);margin:8px 0 0;}
+  details.why{margin-top:7px;}
+  details.why summary{font-size:12px;color:var(--accent-ink);cursor:pointer;}
+  details.why p{font-size:12.5px;color:var(--muted);margin:6px 0 0;padding:8px 12px;border-left:2px solid var(--accent-3);background:var(--code-bg);border-radius:0 6px 6px 0;}
+  .rules{padding:14px 16px;border-top:1px solid var(--line);background:var(--bg);font-size:14px;}
+  .rules p{margin:0 0 10px;max-width:80ch;}
+  .rules p b{font-weight:600;}
+  .rules ul{margin:4px 0 12px;padding-left:20px;color:var(--muted);font-size:13.5px;}
+  .rules ul li{margin:3px 0;}
+  .rules ul li b{color:var(--ink);font-weight:600;}
+  .rules .lvl{display:inline-block;font-size:12px;font-weight:400;border-radius:6px;padding:2px 10px;color:#fff;text-transform:uppercase;letter-spacing:.03em;}
+  .lvl.low{background:var(--good);} .lvl.moderate{background:var(--warn);} .lvl.high{background:var(--crit);}
+  .legs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px;}
+  @media(max-width:760px){.legs{grid-template-columns:1fr;}}
+  .leg{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--panel);}
+  .leg .lno{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+  .leg>b{display:block;margin:6px 0 4px;font-size:15px;font-weight:600;color:var(--accent-ink);}
+  .leg p{font-size:12.5px;color:var(--muted);margin:0;}
+  .leg ul{font-size:12.5px;color:var(--muted);margin:4px 0 0;padding-left:16px;}
+  .publist{columns:2;column-gap:24px;font-size:13.5px;margin:6px 0 0;padding-left:0;list-style:none;max-width:70ch;}
+  @media(max-width:640px){.publist{columns:1;}}
+  .publist li{margin:3px 0;break-inside:avoid;}
+  .publist code{font-size:11.5px;color:var(--accent-ink);background:var(--code-bg);padding:1px 6px;border-radius:5px;margin-right:6px;}
+  .schemafoot{font-size:13.5px;color:var(--muted);margin-top:16px;max-width:74ch;}
+
+  /* fill */
+  .heroroute{border:1px solid var(--accent);border-radius:12px;background:var(--accent-5);padding:18px 22px;margin:18px 0 6px;}
+  .heroroute .rnum{color:var(--accent-ink);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;}
+  .heroroute>b{display:block;font-size:19px;font-weight:600;margin:6px 0 8px;}
+  .heroroute p{margin:0 0 10px;font-size:14px;color:var(--muted);line-height:1.55;max-width:88ch;}
+  .heroroute p b{color:var(--ink);font-weight:600;}
+  .heroroute .herocmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:12px 0;}
+  .heroroute code.clone{flex:1;min-width:260px;display:block;font-size:13px;padding:10px 14px;border:1px solid var(--accent-3);
+             border-radius:8px;background:var(--bg);overflow-x:auto;white-space:nowrap;}
+  .btn{background:var(--accent);color:#fff;font-weight:400;font-size:13.5px;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;}
+  .divider2{display:flex;align-items:center;gap:12px;margin:22px 0 10px;}
+  .divider2::before,.divider2::after{content:"";flex:1;border-top:1px dashed var(--line);}
+  .divider2 span{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .routes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:8px 0 16px;}
+  @media (max-width:760px){.routes{grid-template-columns:1fr;}.heroroute .herocmd{flex-direction:column;}}
+  .route{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:7px;}
+  .route b{font-size:14.5px;font-weight:600;}
+  .route .rnum{color:var(--muted);font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;}
+  .route p{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+  .route a.go{margin-top:auto;font-size:13px;}
+  h2.exh{font-size:19px;font-weight:400;margin:30px 0 4px;}
+  .exsub{font-size:14px;color:var(--muted);margin:0 0 12px;max-width:78ch;}
+  .exsub b{color:var(--ink);font-weight:600;}
+  .publish{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px 18px;margin:12px 0;max-width:82ch;}
+  .publish p{font-size:14.5px;margin:0 0 10px;}
+  .publish p:last-child{margin-bottom:0;}
+  .publish p b{font-weight:600;}
+  .soon{font-size:13px;color:var(--muted);border-left:3px solid var(--warn);padding:8px 12px;margin:10px 0 0;background:var(--bg);border-radius:0 6px 6px 0;}
+  .soon b{color:var(--ink);font-weight:600;}
+
+  footer.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);}
+  footer.foot b{color:var(--ink);font-weight:400;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">The Agentic State × Center for Civic Futures</p>
+    <h1 class="title">The Agent Governance Card</h1>
+  </header>
+
+  <nav class="bar">
+    <div class="seg" role="tablist" aria-label="Pages">
+      <button role="tab" aria-selected="true"  data-page="intro">1 · The card</button>
+      <button role="tab" aria-selected="false" data-page="schema">2 · The schema</button>
+      <button role="tab" aria-selected="false" data-page="fill">3 · Fill it in</button>
+    </div>
+  </nav>
+
+  <!-- ==================== PAGE 1 · THE CARD ==================== -->
+  <section class="page on" id="page-intro">
+    <div class="intro">
+      <p>State governments are moving past chatbots into <b>agentic AI: software that acts</b>. Agents can use tools, touch data, receive and send files, and complete multi-step tasks with autonomy. Yet the IT governance machinery states rely on today, including intake, security review, procurement, and audit, wasn't built for software that acts. The introduction of agents in government presents governance challenges.</p>
+      <p> A first central step to address them is to ensure visibility and transparency on what agents do in public organisations. <b>What is an agent allowed to do? What did it touch? Who answers for it? How does a person step in? And what does it cost to leave?</b> These are questions that cannot and should not be avoided.</p>
+      <p>The Agent Governance Card exists to assess and record this information, bringing structured, comparable transparency to agentic deployments that interact directly with the public or materially influence a decision affecting the public or state resources.</p>
+    </div>
+
+    <div class="qas">
+      <div class="qa">
+        <div class="no">Who uses it</div>
+        <p>Most often <b>a product team</b>, the people who build or configure the agent. A CIO's office, a procurement officer, or an auditor may also fill one in. When a vendor is engaged, the accountable public agency fills it.</p>
+      </div>
+      <div class="qa">
+        <div class="no">When</div>
+        <p>Most often <b>before an agent gets production access</b> to state data, tools, or users. Also earlier, as a checklist during development, or later, for systems already live. Once filled, the card is revisited on a rolling basis.</p>
+      </div>
+      <div class="qa">
+        <div class="no">What it delivers</div>
+        <p>A <b>snapshot of one deployment</b>: capabilities, data used, who answers for it, how a person steps in, and more. From the answers, the card computes an <b>Impact Level</b> that routes the deployment to proportionate obligations.</p>
+      </div>
+    </div>
+
+    <div class="intro">
+      <p>The backbone of the card is its <b>schema</b>. It builds on the governance frameworks that matter most for public deployments, including OMB's memoranda on AI use and procurement, the UK's Algorithmic Transparency Recording Standard and NIST's AI Risk Management Framework, and on frontier research on agents: identity and delegation, autonomy and reversibility, the cost of leaving a vendor.</p> 
+      <p>The schema is composed of twelve dimensions, spanning what an agent does and touches, who answers for it, its risks, and more. Across them, 47 fields: for each, the plain-language question a team answers, the values an answer can take, and the rationale behind the field. Fourteen fields, plus the Impact Level, form the public layer, marked with a triangle (▲), the set of information that would be ideally made public.</p>
+      <p>The schema can be filled in two ways. Teams can work through it by hand, or fill it interactively by running the <b>skill</b>, which acts as the interviewer: it asks the questions one at a time, helps with the hard ones, computes the Impact Level, and emits the filled card. The skill installs in any assistant that supports the open Agent Skills standard, and can be opened directly in the repository of the agent being built, where it reads the answers from the specs and code already there.</p>
+      <p class="links"><button class="go" data-goto="schema">Read the schema →</button> <button class="go" data-goto="fill">Fill it in →</button></p>
+    </div>
+  </section>
+
+  <!-- ==================== PAGE 2 · THE SCHEMA (generated) ==================== -->
+  <section class="page" id="page-schema">
+    <p class="facenote"><b>The card's schema, card v0.4.</b> Twelve dimensions. For each field: the plain-language question a team answers, the values an answer can take, and the rationale behind it. Every field takes one of four answer statuses: <i>answered</i>, <i>unknown</i>, <i>not applicable</i>, <i>not in place</i>. A missing mechanism recorded plainly is a governance finding, not a failure.</p>
+
+    <div class="schemahead">
+      <div class="stat"><b>12</b><span>dimensions</span></div>
+      <div class="stat"><b>47</b><span>fields</span></div>
+      <div class="stat"><b>14<span class="of"> + level</span></b><span>public layer ▲</span></div>
+    </div>
+
+    <p class="dimlbl">Before filling · scope and unit of analysis</p>
+    <div class="dims">
+      <details class="dim"><summary><span class="chev">▶</span><span class="dno">§</span><span class="lt">Is a card required, and for what?</span></summary>
+        <div class="rules">
+          <p><b>A card is required if</b> the system interacts directly with the public, or materially influences a decision-making process with effect on the public or state resources, and takes actions or produces outputs beyond returning static search results.</p>
+          <p><b>Out of scope:</b> embedded commodity features (autocomplete, spell-check, in-app summarization) and purely predictive back-office models. Record those in the AI inventory; use an impact-assessment instrument for consequential predictive models. For the commodity carve-out, apply OMB M-25-22 §2(b)'s two-part test: exempt only if the product is widely available for commercial use <i>and</i> the AI is embedded in a product with substantial non-AI purposes. A product used primarily for its AI is in scope.</p>
+          <p><b>One card = one agent deployment in one operational context.</b> Where a platform serves many units or agencies: one parent card for the shared layer (model, hosting and platform, vendor, identity architecture, exit terms) plus one short deployment addendum per context (purpose, data touched, autonomy, function).</p>
+        </div>
+      </details>
+    </div>
+
+    <p class="dimlbl">Part 1 · every in-scope agent · 29 fields</p>
+    <div class="dims">
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">1</span><span class="lt">Identity</span><span class="cnt">5 fields · 5 ▲</span></summary><div class="flds"><div class="fld" id="f-1.1"><div class="fhead"><code class="fid">1.1</code><div class="fq"><b>Name <span class="pubmark" title="Public layer">▲</span></b><span>What is the agent called?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-1.2"><div class="fhead"><code class="fid">1.2</code><div class="fq"><b>What it is, in plain language <span class="pubmark" title="Public layer">▲</span></b><span>What is it, in plain language? (2–3 sentences)</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-1.3"><div class="fhead"><code class="fid">1.3</code><div class="fq"><b>Purpose / what it&#x27;s for <span class="pubmark" title="Public layer">▲</span></b><span>What is it for — what task or service does it perform?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-1.4"><div class="fhead"><code class="fid">1.4</code><div class="fq"><b>Agent type <span class="pubmark" title="Public layer">▲</span></b><span>Which agent type is it?</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span></div></div><div class="vals"><span class="chip">assistant_copilot</span><span class="chip">autonomous_single</span><span class="chip">orchestrator_subagents</span><span class="chip">agent_as_a_service</span></div><p class="gloss">A single conversational assistant with no tool access is assistant_copilot; so is one whose tools can only READ (retrieval, lookups). Once it can change anything outside the conversation (send, write, book, file), it is autonomous_single — or orchestrator_subagents if it spawns agents.</p></div><div class="fld" id="f-1.5"><div class="fhead"><code class="fid">1.5</code><div class="fq"><b>Location <span class="pubmark" title="Public layer">▲</span></b><span>Where does it run and how is it reached? What is the address of the service, page, or application where the agent operates, and the code repository, if there is one?</span></div><div class="fchips"><span class="st">free text</span></div></div><details class="why"><summary>Rationale</summary><p>Where the agent is reached and where its code lives. Public: a register entry that cannot point to the service it describes is not a register entry.</p></details></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">2</span><span class="lt">Capabilities and impact</span><span class="cnt">6 fields</span></summary><div class="flds"><div class="fld" id="f-2.1"><div class="fhead"><code class="fid">2.1</code><div class="fq"><b>Capability</b><span>What can it do? Choose every capability that applies.</span></div><div class="fchips"><span class="st">several values</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span></div></div><div class="vals"><span class="chip">information_drafting</span><span class="chip">official_communication</span><span class="chip">business_transaction</span><span class="chip">computer_use</span><span class="chip">code_execution</span><span class="chip">data_analysis</span><span class="chip">physical_actuation</span></div><p class="gloss">No-tool conversational assistant = information_drafting only.</p></div><div class="fld" id="f-2.2"><div class="fhead"><code class="fid">2.2</code><div class="fq"><b>Capability specifics</b><span>What exactly does the agent produce or do?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-2.3"><div class="fhead"><code class="fid">2.3</code><div class="fq"><b>Model</b><span>Which model or models does it run on? Give provider, name, and version for each.</span></div><div class="fchips"><span class="st">free text</span></div></div><details class="why"><summary>Rationale</summary><p>Narrowed to the model(s) only: provider, name, version. &#x27;How it decides&#x27; (plans steps, selects tools) is carried by 1.4 agent type, 4.1 autonomy level, and 3.3 tools; hosting and platform moved to 2.4.</p></details></div><div class="fld" id="f-2.4"><div class="fhead"><code class="fid">2.4</code><div class="fq"><b>Hosting and platform</b><span>Where does it run, and what is it built on? Hosting: state environment, vendor cloud, on premises, or a mix. Platform: the framework or product it is assembled in.</span></div><div class="fchips"><span class="st">one value + detail</span></div></div><div class="vals"><span class="chip">state_environment</span><span class="chip">vendor_cloud</span><span class="chip">on_premises</span><span class="chip">hybrid</span></div><details class="why"><summary>Rationale</summary><p>The hosting half of the former &#x27;model &amp; how it decides&#x27; field (2.3 keeps the model half). Hosting decides whose security perimeter the agent sits in and whose logs a reviewer can demand; the platform (free text) decides what the agent can be given access to and what leaving costs (see 12.3).</p></details></div><div class="fld" id="f-2.5"><div class="fhead"><code class="fid">2.5</code><div class="fq"><b>High-impact determination (OMB M-25-21)</b><span>Is the agent&#x27;s output used as a principal basis for a decision or action that has a legal, material, binding, or significant effect on rights, access to services, health and safety, critical infrastructure, or strategic assets? (Material influence counts even when a human signs off.)</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span><span class="st drv" title="One of the six inputs that compute the Impact Level">computes the level</span></div></div><div class="vals"><span class="chip">high_impact</span><span class="chip">presumed_high_but_determined_not</span><span class="chip">not_high_impact</span><span class="chip">not_yet_determined</span></div><ul class="help"><li>(a) civil rights, civil liberties, or privacy</li><li>(b) access to education, housing, insurance, credit, employment, and other programs</li><li>(c) access to critical government resources or services</li><li>(d) human health and safety</li><li>(e) critical infrastructure or public safety</li><li>(f) strategic assets or resources (incl. high-value property and information marked sensitive or classified)</li></ul><details class="why"><summary>Rationale</summary><p>Faithful M-25-21 test (was a Y/N). Categories (a)-(f) verbatim from the M-25-21 §5 &quot;High-Impact AI&quot; definition (verified against the memo 2026-07-24). The memo does not define &quot;principal basis&quot;; the card reads it as: the decision would likely differ without the agent&#x27;s output (interpretive gloss, ours — memo fn 27 requires only that the output &quot;actually serve as a principal basis&quot;). Human involvement does not exempt: &quot;a high-impact determination is possible whether there is or is not human oversight&quot; (§4(a)). §6 lists purposes presumed high-impact (a-o); stepping down from the presumption requires a determination record (2.6 — M-25-21 §4(a) written-documentation requirement). not_yet_determined no longer blocks: the card completes with a PROVISIONAL level and a to_resolve item — see impact_derivation. Drives OMB high-impact status (output 1 of the derivation).</p></details></div><div class="fld" id="f-2.6"><div class="fhead"><code class="fid">2.6</code><div class="fq"><b>Determination record</b><span>Who made the high-impact determination, in what role, on what date — and on what rationale?</span></div><div class="fchips"><span class="st">free text</span></div></div><details class="why"><summary>Rationale</summary><p>REQUIRED when 2.5 = presumed_high_but_determined_not: M-25-21 §4(a) requires written documentation by an appropriate agency official for a determination that a presumed-high use case is not high-impact. Recommended for every other answered 2.5. Without it, the card&#x27;s most consequential legal judgment leaves no trace for a reviewer or ombudsman.</p></details></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">3</span><span class="lt">Data and system access</span><span class="cnt">3 fields</span></summary><div class="flds"><div class="fld" id="f-3.1"><div class="fhead"><code class="fid">3.1</code><div class="fq"><b>Data sensitivity</b><span>What is the most sensitive data it touches in operation — including what users type or say to it? (Judged by what it touches in operation, not the knowledge-store classification.)</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span><span class="st drv" title="One of the six inputs that compute the Impact Level">computes the level</span></div></div><div class="vals"><span class="chip">none_public</span><span class="chip">internal</span><span class="chip">personal_pii</span><span class="chip">sensitive</span></div><p class="gloss">Classify by the most sensitive data the agent touches in operation (incl. user input), not the knowledge-store classification.</p></div><div class="fld" id="f-3.2"><div class="fhead"><code class="fid">3.2</code><div class="fq"><b>Datasets / source of truth</b><span>Which datasets or sources of truth does it use?</span></div><div class="fchips"><span class="st">list</span></div></div></div><div class="fld" id="f-3.3"><div class="fhead"><code class="fid">3.3</code><div class="fq"><b>Tools, systems &amp; APIs it can reach</b><span>Which tools, systems, and APIs can it reach — everything it can call or act on?</span></div><div class="fchips"><span class="st">list</span></div></div></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">4</span><span class="lt">Autonomy and human control</span><span class="cnt">5 fields · 1 ▲</span></summary><div class="flds"><div class="fld" id="f-4.1"><div class="fhead"><code class="fid">4.1</code><div class="fq"><b>Autonomy level <span class="pubmark" title="Public layer">▲</span></b><span>How much does the agent do before a human is involved? (&quot;Acts&quot; = any effect outside the conversation.)</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span><span class="st drv" title="One of the six inputs that compute the Impact Level">computes the level</span></div></div><div class="vals"><span class="chip">informs</span><span class="chip">recommends</span><span class="chip">acts_with_approval</span><span class="chip">acts_without_approval</span></div><p class="gloss">&#x27;acts&#x27; includes any effect outside the conversation (notifications, flags, records, messages).</p></div><div class="fld" id="f-4.2"><div class="fhead"><code class="fid">4.2</code><div class="fq"><b>Reversibility of its actions</b><span>Once the agent&#x27;s output has taken effect, is there a way to undo it?</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span><span class="st drv" title="One of the six inputs that compute the Impact Level">computes the level</span></div></div><div class="vals"><span class="chip">fully_reversible</span><span class="chip">reversible_with_effort</span><span class="chip">hard_to_reverse</span></div><ul class="help"><li>a draft a person edits before it goes anywhere = fully_reversible</li><li>once an answer, message, or change reaches someone who may rely or act on it, it is no longer fully reversible</li><li>a public communication, a payment, a benefits decision, or deleting records = hard_to_reverse</li></ul><p class="gloss">Judged at the point of external effect, not at generation.</p><details class="why"><summary>Rationale</summary><p>Judged as the effect on the affected person at the point of external effect, not as whether the artefact can be edited: a payment can be clawed back and a notice corrected, but the resident may already have spent the money or acted on the notice.</p></details></div><div class="fld" id="f-4.3"><div class="fhead"><code class="fid">4.3</code><div class="fq"><b>Maximum consequence severity</b><span>If the output is wrong, what is in reach? Consider: how many people or records it can touch, whether it moves or decides money, and whether it can cause physical harm or the loss of a right.</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span><span class="st drv" title="One of the six inputs that compute the Impact Level">computes the level</span></div></div><div class="vals"><span class="chip">negligible</span><span class="chip">limited</span><span class="chip">serious</span><span class="chip">severe</span></div><details class="why"><summary>Rationale</summary><p>Worst plausible consequence at operating scale, a second axis alongside reversibility. Anchors (carried in the document&#x27;s rationale): negligible = stays inside the team, few people, no money, no rights; limited = anything published outside the team or with a financial effect; serious = wrong guidance people can act on, or &gt;10,000 people/records in reach; severe = physical harm, loss of a right, or an irreversible effect at scale.</p></details></div><div class="fld" id="f-4.4"><div class="fhead"><code class="fid">4.4</code><div class="fq"><b>Safety red-line (the agentic trifecta)</b><span>Without a human in the loop, does it combine all three of: acting on untrusted or external input; access to non-public personal or protected data; and the ability to change anything outside the conversation? (All three at once, with no human in the loop, is the red-line.)</span></div><div class="fchips"><span class="st">one value</span><span class="st drv" title="One of the six inputs that compute the Impact Level">computes the level</span></div></div><div class="vals"><span class="chip">no</span><span class="chip">yes_with_compensating_controls</span><span class="chip">yes_unresolved</span></div><ul class="help"><li>(a) untrusted/external input — anything a member of the public or an external system can put in front of it</li><li>(b) non-public personal or protected data — judged independently of your data-sensitivity answer (3.1)</li><li>(c) actions that change anything outside the conversation</li><li>all three at once, with no human in the loop, is the red-line</li></ul><details class="why"><summary>Rationale</summary><p>Was Y/N. Trifecta = (a) untrusted/external input + (b) non-public personal/protected data, judged INDEPENDENTLY of 3.1 + (c) actions that change anything outside the conversation, all without a human in the loop. yes_with_compensating_controls = mitigated (name controls). yes_unresolved derives High and adds a to_resolve item: the card strongly recommends not entering production until one trifecta leg is broken or named compensating controls are in place.</p></details></div><div class="fld" id="f-4.5"><div class="fhead"><code class="fid">4.5</code><div class="fq"><b>How a person stops or overrides it</b><span>How does a person stop or override it?</span></div><div class="fchips"><span class="st">free text</span></div></div></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">5</span><span class="lt">Risk</span><span class="cnt">5 fields · 2 ▲</span></summary><div class="flds"><div class="fld" id="f-5.1"><div class="fhead"><code class="fid">5.1</code><div class="fq"><b>Which base risks apply</b><span>Which AI base risks apply? Every AI system carries these — choose all that fit.</span></div><div class="fchips"><span class="st">list</span></div></div><div class="vals"><span class="vlab">suggested</span><span class="chip">confabulation_inaccurate_output</span><span class="chip">harmful_bias</span><span class="chip">data_privacy</span><span class="chip">information_security</span></div><details class="why"><summary>Rationale</summary><p>Base risks every AI system carries (NIST AI 600-1 named categories).</p></details></div><div class="fld" id="f-5.2"><div class="fhead"><code class="fid">5.2</code><div class="fq"><b>Which agentic hazards apply</b><span>Which agentic hazards apply? A system with no tools at all marks this not applicable — that is a complete answer.</span></div><div class="fchips"><span class="st">list</span></div></div><div class="vals"><span class="vlab">suggested</span><span class="chip">prompt_injection</span><span class="chip">unsafe_irreversible_actuation</span><span class="chip">over_privileged_tools</span><span class="chip">memory_poisoning</span><span class="chip">cascading_failure</span></div><details class="why"><summary>Rationale</summary><p>R11 (new) — answer if the agent acts on tools/systems or takes multi-step autonomous action; only a system with NO tools marks this not_applicable. retrieval-only grounding (RAG, document/web lookup) still answers this field — retrieved content is untrusted input, so prompt_injection applies at minimum, even with no write-capable tools.</p></details></div><div class="fld" id="f-5.3"><div class="fhead"><code class="fid">5.3</code><div class="fq"><b>Pre-deployment testing / evaluation done</b><span>Has an actual evaluation of this system been done before deployment, with results?</span></div><div class="fchips"><span class="st">yes / no + link</span></div></div><p class="gloss">A register&#x27;s &#x27;impact assessed: yes&#x27; flag or a framework mapping is NOT testing; Yes only for an actual evaluation of THIS system, with results.</p></div><div class="fld" id="f-5.4"><div class="fhead"><code class="fid">5.4</code><div class="fq"><b>Public plain-language summary published <span class="pubmark" title="Public layer">▲</span></b><span>Is a public plain-language summary published?</span></div><div class="fchips"><span class="st">yes / no + link</span></div></div></div><div class="fld" id="f-5.5"><div class="fhead"><code class="fid">5.5</code><div class="fq"><b>Disclosure — are people told they&#x27;re dealing with an agent <span class="pubmark" title="Public layer">▲</span></b><span>Are the people who interact with it told they&#x27;re dealing with an AI agent? How?</span></div><div class="fchips"><span class="st">yes / no + detail</span></div></div><details class="why"><summary>Rationale</summary><p>Promoted from Extended (was E14a): disclosure is a Core question for any public-facing agent, whatever the Impact Level; AI disclosure is where states have legislated first. An internal-only agent may answer not_applicable — a complete answer.</p></details></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">6</span><span class="lt">Accountability</span><span class="cnt">3 fields · 2 ▲</span></summary><div class="flds"><div class="fld" id="f-6.1"><div class="fhead"><code class="fid">6.1</code><div class="fq"><b>Accountable owner (role, not person) <span class="pubmark" title="Public layer">▲</span></b><span>Who is answerable for it in operation — a role or title, not a person?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-6.2"><div class="fhead"><code class="fid">6.2</code><div class="fq"><b>Deploying agency / unit + contact point <span class="pubmark" title="Public layer">▲</span></b><span>Which agency or unit deploys it, and what is the contact point?</span></div><div class="fchips"><span class="st">free text</span></div></div><details class="why"><summary>Rationale</summary><p>Contact point is now public (ATRS Tier 1).</p></details></div><div class="fld" id="f-6.3"><div class="fhead"><code class="fid">6.3</code><div class="fq"><b>Vendor &amp; exit basics</b><span>Who built and maintains the agent: an outside vendor or an in-house team? If a vendor, under what contract vehicle? How easy is it for the state to switch any of the three: model, platform, or vendor?</span></div><div class="fchips"><span class="st">free text</span></div></div><details class="why"><summary>Rationale</summary><p>Reworded around three parties: the model provider (2.3), the platform (2.4), and the vendor who built and maintains the agent (this field). Lock-in is impact-independent; every agent answers one line here. Full exit checklist in 12.3.</p></details></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">7</span><span class="lt">Function and lifecycle</span><span class="cnt">2 fields · 2 ▲</span></summary><div class="flds"><div class="fld" id="f-7.1"><div class="fhead"><code class="fid">7.1</code><div class="fq"><b>Government function served <span class="pubmark" title="Public layer">▲</span></b><span>Which government function does it serve?</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span></div></div><div class="vals"><span class="chip">administrative_functions</span><span class="chip">cybersecurity</span><span class="chip">emergency_management</span><span class="chip">energy_and_environment</span><span class="chip">government_benefits_processing</span><span class="chip">health_and_medical</span><span class="chip">human_resources</span><span class="chip">information_technology</span><span class="chip">international_affairs</span><span class="chip">law_enforcement</span><span class="chip">procurement_and_financial_management</span><span class="chip">science</span><span class="chip">service_delivery</span><span class="chip">transportation</span><span class="chip">other</span></div><details class="why"><summary>Rationale</summary><p>OMB M-25-21 Use Case Topic Area, verbatim (unchanged; desk-audit B faithful).</p></details></div><div class="fld" id="f-7.2"><div class="fhead"><code class="fid">7.2</code><div class="fq"><b>Lifecycle stage <span class="pubmark" title="Public layer">▲</span></b><span>Where is it in its lifecycle?</span></div><div class="fchips"><span class="st">one value</span><span class="st cmp" title="Controlled value, comparable across states">comparable</span></div></div><div class="vals"><span class="chip">pre_deployment</span><span class="chip">pilot</span><span class="chip">deployed</span><span class="chip">retired</span></div><details class="why"><summary>Rationale</summary><p>Pre_deployment added (OMB development-stage, complete). On retirement the card is closed, not deleted.</p></details></div></div></details>
+    </div>
+
+    <p class="dimlbl">Part 2 · Moderate and High · 18 fields</p>
+    <div class="dims">
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">8</span><span class="lt">Identity, credentials, and delegation</span><span class="cnt">5 fields</span></summary><div class="flds"><div class="fld" id="f-8.1"><div class="fhead"><code class="fid">8.1</code><div class="fq"><b>Acting identity</b><span>When it acts — sends an email, calls a system — whose identity does it use?</span></div><div class="fchips"><span class="st">free text</span></div></div><p class="gloss">Own dedicated service identity, a shared team account, or a specific person&#x27;s login? If you can&#x27;t tell whose authority it acted under, you can&#x27;t hold anyone accountable when it goes wrong. Unsure is common — record what&#x27;s true.</p></div><div class="fld" id="f-8.2"><div class="fhead"><code class="fid">8.2</code><div class="fq"><b>Human principal</b><span>On whose authority does it act — who is the human principal or sponsor?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-8.3"><div class="fhead"><code class="fid">8.3</code><div class="fq"><b>Authorized scope</b><span>What is it allowed to do: (a) which tasks and workflows; (b) which tools, data, and APIs?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-8.4"><div class="fhead"><code class="fid">8.4</code><div class="fq"><b>Sub-agents</b><span>Can it create other agents? If so, can they do more than it can (they shouldn&#x27;t), and is it recorded which agent created which?</span></div><div class="fchips"><span class="st">yes / no + detail</span></div></div></div><div class="fld" id="f-8.5"><div class="fhead"><code class="fid">8.5</code><div class="fq"><b>Traceability to a person</b><span>Can its actions be traced back to the responsible human? How?</span></div><div class="fchips"><span class="st">yes / no + detail</span></div></div></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">9</span><span class="lt">Automation and approval</span><span class="cnt">2 fields</span></summary><div class="flds"><div class="fld" id="f-9.1"><div class="fhead"><code class="fid">9.1</code><div class="fq"><b>Automation boundary</b><span>For each action or decision type: is it autonomous, does it confirm with a human first, or is it human-only?</span></div><div class="fchips"><span class="st">table</span></div></div><div class="vals"><span class="vlab">modes</span><span class="chip">autonomous</span><span class="chip">confirm_first</span><span class="chip">human_only</span></div><p class="gloss">Be specific — &#x27;all financial actions need approval&#x27; is too coarse; say which ones.</p></div><div class="fld" id="f-9.2"><div class="fhead"><code class="fid">9.2</code><div class="fq"><b>Actions requiring human approval</b><span>Which actions always require human approval?</span></div><div class="fchips"><span class="st">list</span></div></div></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">10</span><span class="lt">Oversight and monitoring</span><span class="cnt">5 fields</span></summary><div class="flds"><div class="fld" id="f-10.1"><div class="fhead"><code class="fid">10.1</code><div class="fq"><b>Logs</b><span>What is logged? Is it enough to reconstruct a decision? Does the log distinguish what the agent did on its own from what a person told it to do?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-10.2"><div class="fhead"><code class="fid">10.2</code><div class="fq"><b>Live monitoring and alerts</b><span>Is there live monitoring, and what triggers an alert?</span></div><div class="fchips"><span class="st">yes / no + detail</span></div></div></div><div class="fld" id="f-10.3"><div class="fhead"><code class="fid">10.3</code><div class="fq"><b>Oversight cadence</b><span>How is the agent overseen: continuously, at set intervals, or only when something happens?</span></div><div class="fchips"><span class="st">one value</span></div></div><div class="vals"><span class="chip">event_triggered</span><span class="chip">periodic_interval</span><span class="chip">continuous</span></div><details class="why"><summary>Rationale</summary><p>Periodic_interval added between event_triggered and continuous. For agents, continuous is usually needed — approval-at-launch alone breaks down.</p></details></div><div class="fld" id="f-10.4"><div class="fhead"><code class="fid">10.4</code><div class="fq"><b>Independent review</b><span>Who reviews the agent independently (not on the build team)?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-10.5"><div class="fhead"><code class="fid">10.5</code><div class="fq"><b>Drift trigger</b><span>What change(s) to the agent or its use would require this card to be re-done?</span></div><div class="fchips"><span class="st">free text</span></div></div></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">11</span><span class="lt">Override, escalation, and redress</span><span class="cnt">3 fields · 2 ▲</span></summary><div class="flds"><div class="fld" id="f-11.1"><div class="fhead"><code class="fid">11.1</code><div class="fq"><b>Appeal route <span class="pubmark" title="Public layer">▲</span></b><span>How does someone affected by the agent’s output challenge it?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-11.2"><div class="fhead"><code class="fid">11.2</code><div class="fq"><b>Affected people <span class="pubmark" title="Public layer">▲</span></b><span>Who is affected by it, including indirectly?</span></div><div class="fchips"><span class="st">list</span></div></div></div><div class="fld" id="f-11.3"><div class="fhead"><code class="fid">11.3</code><div class="fq"><b>Safeguard for fully-automated decisions</b><span>When the agent makes a decision with consequences for a person and no one reviews it, what additional safeguard applies?</span></div><div class="fchips"><span class="st">free text</span></div></div></div></div></details>
+<details class="dim"><summary><span class="chev">▶</span><span class="dno">12</span><span class="lt">Cost and lock-in</span><span class="cnt">3 fields</span></summary><div class="flds"><div class="fld" id="f-12.1"><div class="fhead"><code class="fid">12.1</code><div class="fq"><b>Vendor and contract</b><span>Who is the supplier, on what procurement route, and under what data-access terms?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-12.2"><div class="fhead"><code class="fid">12.2</code><div class="fq"><b>Expected value</b><span>What is it compared against, and what is the expected benefit over the status quo?</span></div><div class="fchips"><span class="st">free text</span></div></div></div><div class="fld" id="f-12.3"><div class="fhead"><code class="fid">12.3</code><div class="fq"><b>Exit terms</b><span>If the state had to leave this vendor, could it? Answer each item of the US-OMB M-25-22 checklist.</span></div><div class="fchips"><span class="st">free text</span></div></div><ul class="help"><li>knowledge-transfer arrangements</li><li>data AND model portability (including your prompts, traces, fine-tunes, and vector stores)</li><li>licensing and pricing transparency</li><li>rights to code and models produced under the contract</li><li>vendor-change notice</li><li>rollback and closeout data-transfer plan</li></ul><details class="why"><summary>Rationale</summary><p>Anchored to OMB M-25-22. Checklist verified against the memo 2026-07-24: knowledge transfer + portability + licensing/ pricing transparency = §4(c)(ii); rights to code/models = §4(d)(iii)(C); rollback = §4(d)(iii)(F); vendor-change notice = §4(d)(iii)(G); closeout data-transfer plan = §4(f)(i). The parenthetical (prompts, traces, fine-tunes, vector stores) is the card&#x27;s elaboration of &quot;data and model portability&quot;, not memo text.</p></details></div></div></details>
+    </div>
+
+    <p class="dimlbl">Derived · the Impact Level</p>
+    <div class="dims">
+      <details class="dim" open><summary><span class="chev">▶</span><span class="dno">→</span><span class="lt">Computed from six answers, not chosen</span><span class="cnt">2.5 · 3.1 · 4.1 · 4.2 · 4.3 · 4.4</span></summary>
+        <div class="rules">
+          <p>The Impact Level is computed deterministically from six of the team's own answers, by the engine bundled with the skill. Two independent outputs; the higher wins.</p>
+          <div class="legs">
+            <div class="leg"><span class="lno">Output ① · OMB high-impact status</span><b>from 2.5</b>
+              <p><span class="lvl high">high</span> if the determination is <code>high_impact</code>. Not high if <code>presumed_high_but_determined_not</code> or <code>not_high_impact</code>, with the determination recorded in 2.6. If <code>not_yet_determined</code> or unanswered, the level is the operational tier marked <b>provisional</b>: it may rise to High once the determination is made.</p></div>
+            <div class="leg"><span class="lno">Output ② · operational tier</span><b>from 3.1 · 4.1 · 4.2 · 4.3 · 4.4</b>
+              <p><span class="lvl high">high</span> if any: red-line <code>yes_unresolved</code>; acts without approval <i>and</i> (hard to reverse <i>or</i> severity ≥ serious); sensitive data <i>and</i> acts without approval.</p>
+              <p style="margin-top:6px"><span class="lvl moderate">moderate</span> if any, and not High: personal or sensitive data; acts with or without approval; severity ≥ limited and not informs-only; red-line <code>yes_with_compensating_controls</code>.</p>
+              <p style="margin-top:6px"><span class="lvl low">low</span> otherwise. Any <i>unknown</i> among the five floors the tier at Moderate until resolved.</p></div>
+            <div class="leg"><span class="lno">Final level</span><b>the higher of ① and ②</b>
+              <p>Recommendations to resolve, never prohibitions: complete a pending determination; break one leg of an unresolved red-line or name compensating controls; resolve an unknown input. A Low result for a public-facing agent is confirmed by a named reviewer outside the build team.</p></div>
+          </div>
+          <p><b>What each level requires.</b></p>
+          <ul>
+            <li><b>Low</b> → Part 1 only (public-facing: plus reviewer confirmation).</li>
+            <li><b>Moderate</b> → Part 2. All five dimensions for a substantive Moderate; dimensions 9 and 10 only when Moderate solely because of an unknown.</li>
+            <li><b>High</b> → all of Part 2, plus the OMB M-25-21 §4(b) minimum practices: pre deployment testing, ai impact assessment, independent review, ongoing monitoring with periodic human review, operator training, tested failsafe killswitch, appeal contest route, user public feedback channel, named senior signoff.</li>
+          </ul>
+          <p><b>The public layer ▲.</b> The minimum to publish: the Impact Level plus these fourteen fields.</p>
+          <ul class="publist"><li><code>1.1</code> Name</li><li><code>1.2</code> What it is, in plain language</li><li><code>1.3</code> Purpose / what it&#x27;s for</li><li><code>1.4</code> Agent type</li><li><code>1.5</code> Location</li><li><code>4.1</code> Autonomy level</li><li><code>5.4</code> Public plain-language summary published</li><li><code>5.5</code> Disclosure — are people told they&#x27;re dealing with an agent</li><li><code>6.1</code> Accountable owner (role, not person)</li><li><code>6.2</code> Deploying agency / unit + contact point</li><li><code>7.1</code> Government function served</li><li><code>7.2</code> Lifecycle stage</li><li><code>11.1</code> Appeal route</li><li><code>11.2</code> Affected people</li></ul>
+        </div>
+      </details>
+    </div>
+
+    <p class="schemafoot">This page is rendered from the schema bundled with the skill, <a href="https://github.com/The-Agentic-State/agent-governance-card/blob/main/skills/agent-governance-card/references/schema.snapshot.yaml"><code>schema.snapshot.yaml</code></a> (card v0.4, derivation contract 3, updated 2026-09-14). The full document, with the complete rationale behind each field, is published by the Center for Civic Futures. A filled card keeps <code>card_version</code> and <code>derivation_contract_version</code>, so it can always be read against the rules that produced it.</p>
+  </section>
+
+  <!-- ==================== PAGE 3 · FILL IT IN ==================== -->
+  <section class="page" id="page-fill">
+    <p class="facenote"><b>Two ways to fill it.</b> Work through the schema by hand, or run the skill and let an assistant act as the interviewer.</p>
+
+    <div class="heroroute">
+      <span class="rnum">With the skill · in the assistant you already use</span>
+      <b>Install the skill, then ask it to fill in the card</b>
+      <p>One command installs the skill into any assistant that supports the open Agent Skills standard: Claude Code, Codex, Cursor, GitHub Copilot, Gemini and others. Then ask: <i>"help me fill in the Agent Governance Card for our new intake agent."</i> The skill asks the questions one at a time, helps with the hard ones, computes the Impact Level with a deterministic engine, and emits the filled card, human- and machine-readable.</p>
+      <div class="herocmd">
+        <code class="clone" id="cloneCmd">npx skills add The-Agentic-State/agent-governance-card</code>
+        <button class="btn" id="copyClone">Copy</button>
+      </div>
+      <p><b>Requirements.</b> Python 3 for the derivation engine. Without it the skill still runs, derives the level from the schema's written rules, says so, and recommends verifying by engine before the card is filed. Add <code>-g</code> to install globally. Open source, CC BY 4.0: <a href="https://github.com/The-Agentic-State/agent-governance-card">github.com/The-Agentic-State/agent-governance-card</a>.</p>
+    </div>
+
+    <div class="divider2"><span>Or</span></div>
+
+    <div class="routes">
+      <div class="route"><span class="rnum">By hand</span><b>Fill the blank card</b>
+        <p>The blank card lists every field with its status and value slots, marks the public layer ▲, and carries the derivation rules so the level can be worked out on paper. For platform deployments, add one deployment addendum per context.</p>
+        <a class="go" href="https://github.com/The-Agentic-State/agent-governance-card/blob/main/skills/agent-governance-card/templates/card-template.md">Blank card →</a>
+        <a class="go" href="https://github.com/The-Agentic-State/agent-governance-card/blob/main/skills/agent-governance-card/templates/deployment-addendum.md">Deployment addendum →</a></div>
+      <div class="route"><span class="rnum">Microsoft 365 Copilot</span><b>Build it in Agent Builder</b>
+        <p>Agent Builder cannot install a skill. Paste the condensed instructions as the agent's instructions and add the schema and the blank card as knowledge files. Ten minutes. The level is derived from the written rules there, so verify it with the engine before filing.</p>
+        <a class="go" href="https://github.com/The-Agentic-State/agent-governance-card/tree/main/skills/agent-governance-card/agent-builder">Agent Builder pack →</a></div>
+    </div>
+
+    <h2 class="exh">Worked examples</h2>
+    <p class="exsub">Two completed cards, both at card v0.4: a <a href="https://github.com/The-Agentic-State/agent-governance-card/blob/main/skills/agent-governance-card/examples/snap-prescreener.md">SNAP eligibility pre-screener</a>, a High-tier illustrative composite, and <a href="https://github.com/The-Agentic-State/agent-governance-card/blob/main/skills/agent-governance-card/examples/copilot-statewide.md">M365 Copilot statewide</a>, a real deployment filled from public sources at Moderate.</p>
+
+    <h2 class="exh">Publishing the card</h2>
+    <div class="publish">
+      <p>Once a card is filled, our invitation to states is to make it visible. At minimum it belongs in an internal register. <b>We recommend publishing it openly for citizens to see</b>, in particular the public layer: the fourteen fields, plus the Impact Level, that the schema sets aside for publication, marked ▲. The card was built as the unit of a public register of agent deployments in government.</p>
+      <p>Submissions go to the Center for Civic Futures, which assembles them into a public register of government agents. Publishing a card also builds the comparative picture states currently lack.</p>
+      <p class="soon"><b>Submission route in preparation.</b> When it opens, a run of the skill will end with a link that opens a form with the public fields already filled in. Nothing is submitted until you review them and choose to send.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <b>The Agent Governance Card</b> · developed by <a href="https://agenticstate.org">The Agentic State</a> with the Center for Civic Futures · card v0.4, derivation contract 3 · CC BY 4.0 · <a href="https://github.com/The-Agentic-State/agent-governance-card">source</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var tabs=document.querySelectorAll('.seg button');
+  function show(name){
+    tabs.forEach(function(b){b.setAttribute('aria-selected', String(b.dataset.page===name));});
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+    document.getElementById('page-'+name).classList.add('on');
+    if(history.replaceState) history.replaceState(null,'','#'+name);
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+  tabs.forEach(function(btn){btn.addEventListener('click',function(){show(btn.dataset.page);});});
+  document.querySelectorAll('[data-goto]').forEach(function(btn){
+    btn.addEventListener('click',function(){show(btn.dataset.goto);});
+  });
+  var h=(location.hash||'').replace('#','');
+  if(h && document.getElementById('page-'+h)) show(h);
+  var cc=document.getElementById('copyClone');
+  if(cc) cc.addEventListener('click',function(){
+    var t=document.getElementById('cloneCmd').textContent;
+    if(navigator.clipboard&&navigator.clipboard.writeText)
+      navigator.clipboard.writeText(t).then(
+        function(){cc.textContent='Copied ✓';setTimeout(function(){cc.textContent='Copy';},1400);},
+        function(){cc.textContent='Copy failed';setTimeout(function(){cc.textContent='Copy';},1400);});
+  });
+})();
+</script>
+</body>
+</html>
