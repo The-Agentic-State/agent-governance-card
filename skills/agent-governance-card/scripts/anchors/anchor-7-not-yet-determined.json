@@ -1,29 +1,29 @@
 {
   "case_id": "anchor-not-yet-determined",
-  "card_version": "0.3",
+  "card_version": "0.4",
   "persona": "P1",
   "fields": {
-    "C7": {
+    "2.5": {
       "status": "answered",
       "value": "not_yet_determined"
     },
-    "C8": {
+    "3.1": {
       "status": "answered",
       "value": "internal"
     },
-    "C10": {
+    "4.1": {
       "status": "answered",
       "value": "recommends"
     },
-    "C11": {
+    "4.2": {
       "status": "answered",
       "value": "fully_reversible"
     },
-    "C11a": {
+    "4.3": {
       "status": "answered",
       "value": "negligible"
     },
-    "C12": {
+    "4.4": {
       "status": "answered",
       "value": "no"
     }
@@ -36,7 +36,7 @@
     "to_resolve": [
       {
         "code": "omb_determination_pending",
-        "recommendation": "Complete the OMB high-impact determination before production access \u2014 the level is provisional and may rise to High once determined (record it in C7a)."
+        "recommendation": "Complete the OMB high-impact determination before production access \u2014 the level is provisional and may rise to High once determined (record it in 2.6)."
       }
     ],
     "expert_label": "provisional",
