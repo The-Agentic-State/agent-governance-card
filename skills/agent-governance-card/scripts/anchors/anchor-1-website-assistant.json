@@ -1,12 +1,12 @@
 {
-  "case_id": "anchor-website-assistant", "card_version": "0.3", "persona": "P1",
+  "case_id": "anchor-website-assistant", "card_version": "0.4", "persona": "P1",
   "fields": {
-    "C7": {"status": "answered", "value": "not_high_impact"},
-    "C8": {"status": "answered", "value": "none_public"},
-    "C10": {"status": "answered", "value": "informs"},
-    "C11": {"status": "answered", "value": "fully_reversible"},
-    "C11a": {"status": "answered", "value": "negligible"},
-    "C12": {"status": "answered", "value": "no"}
+    "2.5": {"status": "answered", "value": "not_high_impact"},
+    "3.1": {"status": "answered", "value": "none_public"},
+    "4.1": {"status": "answered", "value": "informs"},
+    "4.2": {"status": "answered", "value": "fully_reversible"},
+    "4.3": {"status": "answered", "value": "negligible"},
+    "4.4": {"status": "answered", "value": "no"}
   },
   "_expected": {"impact_level": "low", "omb_high_impact_status": "not_high_impact",
     "operational_tier": "low", "expert_label": "low",

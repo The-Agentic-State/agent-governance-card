@@ -9,7 +9,7 @@ description: >
   choices. Conducts a plain-language interview driven by the canonical card
   schema — one field at a time, advising on trade-offs as it goes — computes
   the Impact Level under the card's two-output derivation, routes to the right
-  depth (Core, then Extended for Moderate/High), and emits the filled card as
+  depth (Part 1, then Part 2 for Moderate/High), and emits the filled card as
   markdown + machine-readable YAML plus a recorded-gaps block.
 ---
 
@@ -39,6 +39,11 @@ resolve and read the schema per
 you read it from (canonical file in this checkout · environment-provided copy ·
 the copy bundled with this skill).
 
+Field ids are the document's numbers (`"2.5"`, `"10.3"`): dimension number,
+dot, position. Faces show the number and the label together ("2.5 High-impact
+determination"); the id is what fills, anchors, and the engine key on. The
+twelve dimensions, their keys and titles, are listed under `dimensions`.
+
 Check `derivation_contract_version`. The bundled engine
 ([`scripts/derive_impact.py`](scripts/derive_impact.py)) is pinned to the
 contract version it declares (`EXPECTED_CONTRACT_VERSION`). If the schema's is
@@ -54,7 +59,7 @@ the skill's engine needs updating first, and stop at collecting answers.
    future promises."* Timebox honestly: a full-card Core pass takes **~15–20
    minutes conversationally, up to ~40 for an evidence-based fill**; a quick
    scan ~3–5 minutes.
-   **The card never blocks (v0.3).** Unresolved states are normal and welcome:
+   **The card never blocks (since v0.3).** Unresolved states are normal and welcome:
    whatever comes up, the run completes — it records them and recommends next
    steps (`to_resolve`). Never present a recommendation as a prohibition — the
    card is a voluntary instrument; its recommendations become gates only where
@@ -68,7 +73,7 @@ the skill's engine needs updating first, and stop at collecting answers.
    this — which fits today? **Quick scan** (~7 questions, 3–5 min): just the
    inputs that compute the Impact Level — you get a provisional level, what it
    would obligate you to, and a to-do list. Not a fileable card. **Full card**
-   (27 Core questions, ~15–20 min conversational / up to ~40 evidence-based,
+   (29 Part 1 questions, ~15–20 min conversational / up to ~40 evidence-based,
    plus Part 2 if routed): the complete, fileable record."* The team decides.
    If they pick the quick scan while saying they're about to ship, note once
    that a reviewer will want the full card — then respect the choice (the same
@@ -80,11 +85,12 @@ the skill's engine needs updating first, and stop at collecting answers.
    for the shared layer + a short deployment addendum per context
    ([`templates/deployment-addendum.md`](templates/deployment-addendum.md)).
 5. **Ask one field at a time**, in schema order, **prefixed with a progress
-   marker** — `[Core 12/27 · Autonomy & human control]` (quick scan:
+   marker** — `[Part 1 · 16/29 · 4 Autonomy and human control]` (quick scan:
    `[Quick scan 3/7]`), counts computed from the schema you loaded. Add a
-   milestone line at each group boundary ("Identity done — 3 of 7 sections").
+   milestone line at each dimension boundary ("1 Identity done — 1 of 7
+   dimensions").
    Use the field's `question` verbatim, give its `gloss`/`help` reading, and
-   for enums offer the schema's `values` (for long enums like C17, offer the
+   for enums offer the schema's `values` (for long enums like 7.1, offer the
    best-fit candidates and name the rest). Never dump multiple fields at once.
 6. **Record answer statuses faithfully:** `answered` / `unknown` /
    `not_applicable` / `not_in_place`. Never pressure the team toward the
@@ -110,39 +116,42 @@ the skill's engine needs updating first, and stop at collecting answers.
 
 ## 3 · Navigation & routing
 
-- **Order:** walk `core_fields` in schema order, grouped by each field's
-  `group` (identity → what_it_does → what_it_touches → autonomy_control →
-  accountability → placement → risk). Then, if routed, `extended_fields` the
-  same way.
-- **Quick scan** (`mode: quick_scan`): ask **C1 + the six derivation inputs**
-  (C7, C8, C10, C11, C11a, C12) with their full glosses/help, derive with the
+- **Order:** walk `core_fields` in schema order — dimensions 1 Identity → 2
+  Capabilities and impact → 3 Data and system access → 4 Autonomy and human
+  control → 5 Risk → 6 Accountability → 7 Function and lifecycle (each field's
+  `group` names its dimension's key). Then, if routed, `extended_fields` the
+  same way (8 → 12).
+- **Quick scan** (`mode: quick_scan`): ask **1.1 + the six derivation inputs**
+  (2.5, 3.1, 4.1, 4.2, 4.3, 4.4) with their full glosses/help, derive with the
   engine as usual, and emit the quick-scan variant (§5). **No Part 2** in a
   quick scan — depth comes from upgrading. **Upgrade path:** after the quick
   verdict, offer *"continue to the full card — your 7 answers carry over,
-  ~20 questions left"*; on upgrade, walk the remaining Core fields (skip the
+  22 questions left"*; on upgrade, walk the remaining Part 1 fields (skip the
   ones already answered) and re-emit as `mode: full`.
 - **Full card by default, timeboxed honestly.** Every in-scope agent that's
-  filing completes Core (~15–20 min conversational, up to ~40 evidence-based,
-  to an Impact Level and a filled card). Extended (Part 2) only when the
+  filing completes Part 1 (~15–20 min conversational, up to ~40 evidence-based,
+  to an Impact Level and a filled card). Part 2 only when the
   computed level is **Moderate or High**, or the team opts in.
-- **Follow-ons:** ask C5a right after C5 (capability specifics) and C8a right
-  after C8 (datasets/source of truth) — they complete the parent question.
-- **The six derivation inputs — C7, C8, C10, C11, C11a, C12 — must end as
+- **Follow-ons:** 2.2 (capability specifics) completes 2.1, 2.4 (hosting and
+  platform) completes 2.3, and 3.2 (datasets) completes 3.1 — ask each right
+  after its parent.
+- **The six derivation inputs — 2.5, 3.1, 4.1, 4.2, 4.3, 4.4 — must end as
   `answered` or `unknown`, never `not_applicable`.** They apply to every
   in-scope agent by construction, and the engine treats anything non-answered
-  as unknown: an `unknown` on C8/C10/C11/C11a/C12 floors the tier at Moderate,
-  and a non-answered C7 makes the level **provisional** (determination pending)
+  as unknown: an `unknown` on 3.1/4.1/4.2/4.3/4.4 floors the tier at Moderate,
+  and a non-answered 2.5 makes the level **provisional** (determination pending)
   with a `to_resolve` item. Say so when it happens, warmly — the floor and the
   provisional flag are how the card responds to missing facts, not punishments.
-- **C7a (determination record):** required whenever C7 =
+- **2.6 (determination record):** required whenever 2.5 =
   `presumed_high_but_determined_not` — who determined, in what role, when, and
   why (M-25-21 §4(a) requires written documentation for a step-down).
-  Recommended for every other answered C7.
-- **Unknown-floored Moderate routes to the reduced Part 2** (F7): only the
-  `automation_detail` + `oversight` groups (E6–E12) plus a resolve-by
-  suggestion — read `part2_groups` from the engine. A substantive Moderate or
-  High completes all of Part 2.
-- **C19a (agentic hazards):** `not_applicable` is complete only for a system
+  Recommended for every other answered 2.5.
+- **Unknown-floored Moderate routes to the reduced Part 2** (F7): only
+  dimensions 9 Automation and approval and 10 Oversight and monitoring
+  (`automation_approval` + `oversight_monitoring`, fields 9.1–10.5) plus a
+  resolve-by suggestion — read `part2_groups` from the engine. A substantive
+  Moderate or High completes all of Part 2.
+- **5.2 (agentic hazards):** `not_applicable` is complete only for a system
   with NO tools and no multi-step autonomy. Retrieval-only grounding (RAG,
   document/web lookup) still answers — retrieved content is untrusted input,
   so `prompt_injection` applies at minimum.
@@ -157,12 +166,12 @@ fill JSON and run the bundled script.
 
 ```json
 {"case_id": "<agent>", "fields": {
-  "C7":  {"status": "answered", "value": "high_impact"},
-  "C8":  {"status": "answered", "value": "personal_pii"},
-  "C10": {"status": "answered", "value": "recommends"},
-  "C11": {"status": "answered", "value": "reversible_with_effort"},
-  "C11a":{"status": "answered", "value": "serious"},
-  "C12": {"status": "unknown"}
+  "2.5": {"status": "answered", "value": "high_impact"},
+  "3.1": {"status": "answered", "value": "personal_pii"},
+  "4.1": {"status": "answered", "value": "recommends"},
+  "4.2": {"status": "answered", "value": "reversible_with_effort"},
+  "4.3": {"status": "answered", "value": "serious"},
+  "4.4": {"status": "unknown"}
 }}
 ```
 
@@ -176,7 +185,7 @@ Read `impact_level`, `fired_triggers` (which rules fired),
 `level_provisional` (true when the OMB determination is pending — the level
 stands but may rise to High once determined; say so plainly), `to_resolve`
 (recommendations to relay, warmly and verbatim in substance), `part2_groups`
-(which Extended groups to ask — the reduced set for a floored-only Moderate),
+(which Part 2 dimensions to ask — the reduced set for a floored-only Moderate),
 `tier_floored_by_unknown`, and `level_fragile` (true when unknowns or a
 pending determination could still move a low/moderate result — worth telling
 the team). `final_level` duplicates `impact_level`.
@@ -184,25 +193,25 @@ the team). `final_level` duplicates `impact_level`.
 **Fallback — prose rules** (no code execution available). The schema's
 `impact_derivation` block is authoritative; condensed:
 
-- **① OMB high-impact status** (from C7): `high_impact` → **HIGH** ·
+- **① OMB high-impact status** (from 2.5): `high_impact` → **HIGH** ·
   `presumed_high_but_determined_not` / `not_high_impact` → not high (record
-  the determination in C7a) · `not_yet_determined` **or C7 not answered** →
+  the determination in 2.6) · `not_yet_determined` **or 2.5 not answered** →
   the level is the operational tier marked **PROVISIONAL** (may rise to High
   once determined) + a `to_resolve` item to complete the determination.
-- **② Operational tier** (from C8, C10, C11, C11a, C12):
-  **HIGH** if any — C12 `yes_unresolved` · `acts_without_approval` **and**
+- **② Operational tier** (from 3.1, 4.1, 4.2, 4.3, 4.4):
+  **HIGH** if any — 4.4 `yes_unresolved` · `acts_without_approval` **and**
   (`hard_to_reverse` **or** severity ≥ serious) · sensitive data **and**
   `acts_without_approval`. **MODERATE** if any (and not High) — PII or
   sensitive data · acts with/without approval · severity ≥ limited and not
-  informs-only · C12 `yes_with_compensating_controls`. **LOW** otherwise.
+  informs-only · 4.4 `yes_with_compensating_controls`. **LOW** otherwise.
 - **Final level = the higher of ① and ②.**
-- **Unknown-floor:** any `unknown` among C8/C10/C11/C11a/C12 → tier cannot be
+- **Unknown-floor:** any `unknown` among 3.1/4.1/4.2/4.3/4.4 → tier cannot be
   Low (at least Moderate until resolved).
 
 When you derive by prose, say so, and recommend the team re-check the tier
 with `scripts/derive_impact.py` before filing the card.
 
-**Strong recommendation, independent of the tier:** **C12 `yes_unresolved`
+**Strong recommendation, independent of the tier:** **4.4 `yes_unresolved`
 derives High and adds a `to_resolve` item** — say it plainly and warmly the
 moment it's recorded, and again at the verdict (the fired trigger is
 `op:redline_unresolved`): *the card strongly recommends not entering
@@ -212,10 +221,10 @@ then re-answer as `yes_with_compensating_controls`.* A recommendation, not a
 prohibition — the team can still complete and file the card; the unresolved
 red-line is visible on its face.
 
-**What each level requires:** **Low** → Core card only (public-facing: +
-reviewer confirmation). **Moderate** → Part 2 per `part2_groups` (all groups
-for a substantive Moderate; `automation_detail` + `oversight` only when
-floored by an unknown). **High** → all of Part 2 **plus** the schema's
+**What each level requires:** **Low** → Part 1 only (public-facing: +
+reviewer confirmation). **Moderate** → Part 2 per `part2_groups` (all five
+dimensions for a substantive Moderate; dimensions 9 and 10 only when floored
+by an unknown). **High** → all of Part 2 **plus** the schema's
 `high_additionally_requires` list — the full OMB M-25-21 §4(b) minimum-practice
 set (pre-deployment testing · documented AI impact assessment · independent
 review · ongoing monitoring with periodic human review · operator training ·
@@ -231,7 +240,7 @@ At the end, produce — following
    card, grouped by dimension, with the computed Impact Level, **which output
    drove it**, the fired triggers, and the obligations for the level.
 2. **A YAML values block** — the same answers keyed to the schema ids
-   (C1…C22, E1…E18, including the a-fields), each as `{status, value}`, plus
+   (`"1.1"` … `"7.2"`, `"8.1"` … `"12.3"`, quoted), each as `{status, value}`, plus
    `card_version`, `derivation_contract_version`, and **`mode: quick_scan |
    full`** from this run — so the card can be filed, diffed, compared across
    states, and a quick scan can never masquerade as a filed card.
@@ -271,7 +280,7 @@ Worked examples of finished output:
   determination is pending. The level stands and the card files — but say
   plainly, twice (at derivation and at emit), that it may rise to High once
   the determination is made, and relay the `to_resolve` item.
-- **Red-line unresolved** (C12 `yes_unresolved`): High tier + a standing
+- **Red-line unresolved** (4.4 `yes_unresolved`): High tier + a standing
   strong recommendation not to enter production until resolved (§4). A card
   can honestly document a system that should not yet be in production — say
   so, warmly, and point at the two concrete ways out.
